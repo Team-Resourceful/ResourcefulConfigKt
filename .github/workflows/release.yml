@@ -41,7 +41,7 @@ jobs:
           properties: "mc_version enabled_platforms"
 
       - name: Publish package
-        run: ./gradlew publish --info
+        run: ./gradlew publish
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASS: ${{ secrets.MAVEN_PASSWORD }}

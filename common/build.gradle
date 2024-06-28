@@ -1,0 +1,14 @@
+architectury {
+    common(enabled_platforms.split(","))
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:$fabric_loader_version"
+    modImplementation("com.teamresourceful.resourcefulconfig:resourcefulconfig-common-${mc_version}:${version}")
+}
+
+jar {
+    manifest {
+        attributes 'Fabric-Loom-Remap': true
+    }
+}

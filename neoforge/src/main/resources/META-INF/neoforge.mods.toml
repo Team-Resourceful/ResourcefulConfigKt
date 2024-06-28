@@ -1,0 +1,25 @@
+modLoader = "kotlinforforge"
+loaderVersion = "[3,)"
+license = "MIT"
+issueTrackerURL="https://github.com/Team-Resourceful/ResourcefulConfigKt/issues/new/choose"
+
+[[mods]]
+    modId = "resourcefulconfigkt"
+    version = "${version}"
+    displayName = "Resourceful Config Kotlin"
+    authors = "ThatGravyBoat"
+    description = "Team Resourceful Library"
+
+[[dependencies.resourcefulconfigkt]]
+    modId = "neoforge"
+    type = "required"
+    versionRange = "[21.0.0-beta,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.resourcefulconfigkt]]
+    modId = "minecraft"
+    type = "required"
+    versionRange = "[1.21,)"
+    ordering = "NONE"
+    side = "BOTH"

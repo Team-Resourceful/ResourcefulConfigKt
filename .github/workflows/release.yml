@@ -1,0 +1,58 @@
+name: Publish Release
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.TEAM_RESOURCEFUL_BOT }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Set Gradle Perms
+        run: chmod +x gradlew
+
+      - name: Get Mod Version
+        id: version
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: "./gradle.properties"
+          properties: "version"
+
+      - name: Get MC Version and Platforms
+        id: props
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: "./gradle.properties"
+          properties: "mc_version enabled_platforms"
+
+      - name: Publish package
+        run: ./gradlew publish --info
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASS: ${{ secrets.MAVEN_PASSWORD }}
+
+      - name: Update Readme
+        run: |
+          ./gradlew injectReadme
+          mv -f ./build/README.md .
+
+      - name: Commit Version Updates
+        run: |
+          git config --global user.name "TeamResourcefulBot"
+          git config --global user.email "teamresourcefulbot@users.noreply.github.com"
+          git diff-index --quiet HEAD || { git commit -am "Released v${{ steps.version.outputs.version }}"; git push; }

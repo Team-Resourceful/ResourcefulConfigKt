@@ -1,0 +1,104 @@
+plugins {
+    id "architectury-plugin" version "3.4-SNAPSHOT"
+    id "dev.architectury.loom" version "1.6-SNAPSHOT" apply false
+    id "org.jetbrains.kotlin.jvm" version "2.0.0" apply false
+    id "com.teamresourceful.resourcefulgradle" version "0.0.+"
+}
+
+architectury {
+    minecraft = mc_version
+}
+
+subprojects {
+    apply plugin: "dev.architectury.loom"
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:$mc_version"
+        mappings loom.officialMojangMappings()
+
+        implementation "org.jetbrains.kotlin:kotlin-reflect:2.0.0"
+    }
+
+    repositories {
+        maven { url "https://maven.teamresourceful.com/repository/maven-public/" }
+        maven { url "https://maven.neoforged.net/releases/" }
+        mavenLocal()
+    }
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "org.jetbrains.kotlin.jvm"
+    apply plugin: "architectury-plugin"
+    apply plugin: "maven-publish"
+
+    archivesBaseName = archives_base_name
+    group = maven_group
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+        options.release = 21
+    }
+
+    java {
+        withSourcesJar()
+    }
+
+    publishing {
+        if (project != rootProject) {
+            publications {
+                mavenJava(MavenPublication) {
+                    artifactId = "$archives_base_name-$project.name-$mc_version"
+                    from components.java
+
+                    pom {
+                        name = 'ResourcefulConfigKt'
+                        description = 'The library behind Team Resourceful mods and more.'
+                        url = 'https://github.com/Team-Resourceful/ResourcefulConfigKt'
+
+                        scm {
+                            connection = 'git:https://github.com/Team-Resourceful/ResourcefulConfigKt.git'
+                            developerConnection = 'git:https://github.com/Team-Resourceful/ResourcefulConfigKt.git'
+                            url = 'https://github.com/Team-Resourceful/ResourcefulConfigKt'
+                        }
+
+                        licenses {
+                            license {
+                                name = 'MIT'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                url = nightly.toBoolean()
+                        ? "https://maven.teamresourceful.com/repository/maven-nightly/"
+                        : "https://maven.teamresourceful.com/repository/maven-releases/"
+                credentials {
+                    def ENV = System.getenv()
+                    username ENV.MAVEN_USER
+                    password ENV.MAVEN_PASS
+                }
+            }
+        }
+    }
+}
+
+resourcefulGradle {
+    templates {
+        readme {
+            source = file("templates/README.md.template")
+            injectedValues = [
+                    "version"            : version,
+                    "mc_version"         : mc_version
+            ]
+        }
+    }
+}

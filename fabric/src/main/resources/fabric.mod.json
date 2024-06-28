@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "resourcefulconfigkt",
+  "version": "${version}",
+  "name": "Resourceful Config Kotlin",
+  "description": "Library Mod by Team Resourceful",
+  "contact": {
+    "issues": "https://github.com/Team-Resourceful/ResourcefulConfigKt/issues/new/choose",
+    "sources": "https://github.com/Team-Resourceful/ResourcefulConfigKt",
+    "homepage": "https://teamresourceful.com"
+  },
+  "authors": [
+    "ThatGravyBoat"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "depends": {
+    "fabric": "*",
+    "minecraft": ">=1.21-beta.4"
+  }
+}

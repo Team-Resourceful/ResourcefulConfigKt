@@ -1,11 +1,11 @@
-# Resourceful Lib Kotlin
+# Resourceful Config Kotlin
 <hr>
 
-The extensions to Resourceful Lib for Kotlin.
+The extensions to Resourceful Config for Kotlin.
 
 ### License and Availability
 
-The mod is licensed under MIT, this is an extension of Resourceful Lib and is available only on the maven.
+The mod is licensed under MIT, this is an extension of Resourceful Config and is available only on the maven.
 
 ### Contributions
 
@@ -28,7 +28,7 @@ You can then add our mod as a dependency:
 ```gradle
 dependencies {
     <--- Other dependencies here --->
-    implementation fg.deobf("com.teamresourceful.resourcefullibkt:resourcefullibkt-neoforge-1.20.6:1.0.3")
+    implementation fg.deobf("com.teamresourceful.resourcefulconfigkt:resourcefulconfigkt-neoforge-1.21:3.0.2")
 }
 ```
 
@@ -36,7 +36,7 @@ dependencies {
 ```gradle
 dependencies {
     <--- Other dependencies here --->
-    implementation "com.teamresourceful.resourcefullibkt:resourcefullibkt-fabric-1.20.6:1.0.3"
+    implementation "com.teamresourceful.resourcefulconfigkt:resourcefulconfigkt-fabric-1.21:3.0.2"
 }
 ```
 
@@ -46,7 +46,7 @@ dependencies {
 ```gradle
 dependencies {
     <--- Other dependencies here --->
-    modImplementation "com.teamresourceful.resourcefullibkt:resourcefullibkt-common-1.20.6:1.0.3"
+    modImplementation "com.teamresourceful.resourcefulconfigkt:resourcefulconfigkt-common-1.21:3.0.2"
 }
 ```
 
@@ -54,7 +54,7 @@ dependencies {
 ```gradle
 dependencies {
     <--- Other dependencies here --->
-    modImplementation "com.teamresourceful.resourcefullibkt:resourcefullibkt-fabric-1.20.6:1.0.3"
+    modImplementation "com.teamresourceful.resourcefulconfigkt:resourcefulconfigkt-fabric-1.21:3.0.2"
 }
 ```
 
@@ -62,7 +62,7 @@ dependencies {
 ```gradle
 dependencies {
     <--- Other dependencies here --->
-    modImplementation "com.teamresourceful.resourcefullibkt:resourcefullibkt-neoforge-1.20.6:1.0.3"
+    modImplementation "com.teamresourceful.resourcefulconfigkt:resourcefulconfigkt-neoforge-1.21:3.0.2"
 }
 ```
 

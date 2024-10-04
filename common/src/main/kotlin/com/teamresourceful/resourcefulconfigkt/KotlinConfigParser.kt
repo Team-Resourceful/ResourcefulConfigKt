@@ -1,9 +1,6 @@
 package com.teamresourceful.resourcefulconfigkt
 
-import com.teamresourceful.resourcefulconfig.api.annotations.Category
-import com.teamresourceful.resourcefulconfig.api.annotations.Config
-import com.teamresourceful.resourcefulconfig.api.annotations.ConfigButton
-import com.teamresourceful.resourcefulconfig.api.annotations.ConfigEntry
+import com.teamresourceful.resourcefulconfig.api.annotations.*
 import com.teamresourceful.resourcefulconfig.api.loader.ConfigParser
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfig
 import com.teamresourceful.resourcefulconfig.api.types.entries.Observable
@@ -45,15 +42,16 @@ class KotlinConfigParser : ConfigParser {
         val properties: List<KProperty1<T, Any>> = klass.jvmOrderedProperties.filterIsInstance<KProperty1<T, Any>>()
         for (property in properties) {
             assertEntry(instance, property)?.let { data ->
-                if (data.type == EntryType.OBJECT) {
+                val type = getEntryType(instance, property, data.type)
+                if (type == EntryType.OBJECT) {
                     val subInstance = property.get(instance)
                     val objectEntry = KotlinObjectEntry(EntryData.of(property.annotationGetter, property.javaClass))
                     populateEntries(subInstance, objectEntry)
                     config.entries()[data.id] = objectEntry
                 } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
-                    config.entries()[data.id] = ParsedObservableEntry(data.type, property, instance)
+                    config.entries()[data.id] = ParsedObservableEntry(type, property, instance)
                 } else {
-                    config.entries()[data.id] = KotlinConfigEntry(data.type, property as KMutableProperty1<T, Any>, instance)
+                    config.entries()[data.id] = KotlinConfigEntry(type, property as KMutableProperty1<T, Any>, instance)
                 }
             }
             assertButton(instance, property)?.let { (data, runnable) ->
@@ -79,12 +77,13 @@ class KotlinConfigParser : ConfigParser {
         val properties: List<KProperty1<T, Any>> = klass.jvmOrderedProperties.filterIsInstance<KProperty1<T, Any>>()
         for (property in properties) {
             val data = assertEntry(instance, property) ?: continue
-            val entry = if (data.type == EntryType.OBJECT) {
+            val type = getEntryType(instance, property, data.type)
+            val entry = if (type == EntryType.OBJECT) {
                 error("Entry ${property.name} cannot be an object!")
             } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
-                ParsedObservableEntry(data.type, property, instance)
+                ParsedObservableEntry(type, property, instance)
             } else {
-                KotlinConfigEntry(data.type, property as KMutableProperty1<T, Any>, instance)
+                KotlinConfigEntry(type, property as KMutableProperty1<T, Any>, instance)
             }
 
             if (entry.defaultValue() == null) error("Entry ${property.name} has a null default value!")
@@ -105,14 +104,20 @@ class KotlinConfigParser : ConfigParser {
 
     private fun <T : Any> assertEntry(instance: T, property: KProperty1<T, *>): ConfigEntry? {
         val data = property.getAnnotation<ConfigEntry>() ?: return null
-        if (data.type.mustBeFinal() == property is KMutableProperty<*>) error("Property ${property.name} in must be ${if (data.type.mustBeFinal()) "val" else "var"}")
-        if (property.returnType.isMarkedNullable) error("Property ${property.name} in must not be nullable")
+        val name = property.name
+        return collectErrors({ "Entry $name is invalid!\n\t$this\n" }) {
+            val type = getEntryType(instance, property, data.type)
+            val isObservable = property.returnType.isSubtypeOf(Observable::class.starProjectedType)
+            if (!isObservable && type.mustBeFinal() == property is KMutableProperty<*>) add("Property ${property.name} in must be ${if (type.mustBeFinal()) "val" else "var"}")
+            if (isObservable && property is KMutableProperty<*>) add("Property ${property.name} in must be val")
+            if (property.returnType.isMarkedNullable) add("Property ${property.name} in must not be nullable")
 
-        val klass = getFieldType(instance, property, data.type)
-        if (!data.type.test(klass)) error("Property ${property.name} is not of type ${data.type.name}!")
-        if (data.id.contains(".")) error("Entry ${property.name} has an invalid id! Ids must not contain '.'")
+            val klass = getFieldType(instance, property, type)
+            if (!type.test(klass)) add("Property ${property.name} is not of type ${type.name}!")
+            if (data.id.contains(".")) add("Entry ${property.name} has an invalid id! Ids must not contain '.'")
 
-        return data
+            return@collectErrors data
+        }
     }
 
     private fun <T : Any> assertButton(instance: T, property: KProperty1<T, *>): Pair<ConfigButton, () -> Unit>? {
@@ -144,5 +149,35 @@ class KotlinConfigParser : ConfigParser {
             }
         }
         return type
+    }
+
+    private fun <T : Any> getEntryType(instance: T, property: KProperty1<T, *>, defaultValue: EntryType): EntryType {
+        var fieldType: Class<*> = property.returnType.javaClass
+        if (fieldType == Observable::class.java) fieldType = (property.get(instance) as Observable<*>).type()
+        if (fieldType.isArray) fieldType = fieldType.componentType
+        return getEntryType(fieldType, defaultValue)
+    }
+
+    private fun getEntryType(type: Class<*>, defaultValue: EntryType): EntryType {
+        return when {
+            type.getAnnotation(ConfigObject::class.java) != null -> EntryType.OBJECT
+            type == java.lang.Long.TYPE || type == Long::class.java -> EntryType.INTEGER
+            type == Integer.TYPE || type == Int::class.java -> EntryType.INTEGER
+            type == java.lang.Short.TYPE || type == Short::class.java -> EntryType.INTEGER
+            type == java.lang.Byte.TYPE || type == Byte::class.java -> EntryType.INTEGER
+            type == java.lang.Double.TYPE || type == Double::class.java -> EntryType.DOUBLE
+            type == java.lang.Float.TYPE || type == Float::class.java -> EntryType.DOUBLE
+            type == java.lang.Boolean.TYPE || type == Boolean::class.java -> EntryType.BOOLEAN
+            type == String::class.java -> EntryType.STRING
+            type.isEnum -> EntryType.ENUM
+            else -> defaultValue
+        }
+    }
+
+    private fun <R> collectErrors(response: String.() -> String, block: MutableList<String>.() -> R): R {
+        val errors = mutableListOf<String>()
+        val result = errors.block()
+        if (errors.isNotEmpty()) error(response(errors.joinToString("\n\t")))
+        return result
     }
 }

@@ -40,7 +40,11 @@ internal class KotlinConfigEntry<T>(
     override fun get() = property.get(instance)
 
     override fun getArray() = property.get(instance) as Array<*>
-    override fun setArray(array: Array<out Any>) = runCatching { property.set(instance, array) }.isSuccess
+    override fun setArray(array: Array<out Any>) = runCatching {
+        val newArray = java.lang.reflect.Array.newInstance(objectType(), array.size)
+        System.arraycopy(array, 0, newArray, 0, array.size)
+        property.set(instance, newArray)
+    }.isSuccess
 
     override fun getByte() = property.get(instance) as Byte
     override fun setByte(value: Byte) = runCatching {

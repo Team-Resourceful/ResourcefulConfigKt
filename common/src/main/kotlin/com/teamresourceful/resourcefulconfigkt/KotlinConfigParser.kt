@@ -161,12 +161,12 @@ class KotlinConfigParser : ConfigParser {
     private fun getEntryType(type: Class<*>, defaultValue: EntryType): EntryType {
         return when {
             type.getAnnotation(ConfigObject::class.java) != null -> EntryType.OBJECT
-            type == java.lang.Long.TYPE || type == Long::class.java -> EntryType.INTEGER
+            type == java.lang.Long.TYPE || type == Long::class.java -> EntryType.LONG
             type == Integer.TYPE || type == Int::class.java -> EntryType.INTEGER
-            type == java.lang.Short.TYPE || type == Short::class.java -> EntryType.INTEGER
-            type == java.lang.Byte.TYPE || type == Byte::class.java -> EntryType.INTEGER
+            type == java.lang.Short.TYPE || type == Short::class.java -> EntryType.SHORT
+            type == java.lang.Byte.TYPE || type == Byte::class.java -> EntryType.BYTE
             type == java.lang.Double.TYPE || type == Double::class.java -> EntryType.DOUBLE
-            type == java.lang.Float.TYPE || type == Float::class.java -> EntryType.DOUBLE
+            type == java.lang.Float.TYPE || type == Float::class.java -> EntryType.FLOAT
             type == java.lang.Boolean.TYPE || type == Boolean::class.java -> EntryType.BOOLEAN
             type == String::class.java -> EntryType.STRING
             type.isEnum -> EntryType.ENUM

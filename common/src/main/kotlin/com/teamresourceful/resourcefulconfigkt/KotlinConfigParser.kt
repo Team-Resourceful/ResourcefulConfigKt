@@ -152,7 +152,7 @@ class KotlinConfigParser : ConfigParser {
     }
 
     private fun <T : Any> getEntryType(instance: T, property: KProperty1<T, *>, defaultValue: EntryType): EntryType {
-        var fieldType: Class<*> = property.returnType.javaClass
+        var fieldType: Class<*> = property.javaClass
         if (fieldType == Observable::class.java) fieldType = (property.get(instance) as Observable<*>).type()
         if (fieldType.isArray) fieldType = fieldType.componentType
         return getEntryType(fieldType, defaultValue)

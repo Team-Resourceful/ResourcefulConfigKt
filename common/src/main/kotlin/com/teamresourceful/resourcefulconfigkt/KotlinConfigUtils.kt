@@ -44,7 +44,7 @@ internal fun <T> ParsedObservableEntry(entryType: EntryType, property: KProperty
         entryType,
         type,
         observable,
-        EntryData.of(property.annotationGetter, type),
+        EntryData.of(property.annotationGetter, observable.type()),
         default
     )
 }

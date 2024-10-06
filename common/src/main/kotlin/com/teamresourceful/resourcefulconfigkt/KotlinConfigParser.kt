@@ -135,18 +135,19 @@ class KotlinConfigParser : ConfigParser {
     }
 
     private fun <T : Any> getFieldType(instance: T, property: KProperty1<T, *>, entry: EntryType): Class<*> {
-        val type =  property.javaClass
+        var type =  property.javaClass
+        if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
+            type = runCatching {
+                (property.get(instance) as Observable<*>).type()
+            }.getOrElse {
+                error("Property ${property.name} is an Observable but its type could not be determined!")
+            }
+        }
         if (type.isArray) {
             require(entry.isAllowedInArrays) {
                 "Entry " + property.name + " is an array but its type is not allowed in arrays!"
             }
             return type.componentType
-        } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
-            return runCatching {
-                (property.get(instance) as Observable<*>).type()
-            }.getOrElse {
-                error("Property ${property.name} is an Observable but its type could not be determined!")
-            }
         }
         return type
     }

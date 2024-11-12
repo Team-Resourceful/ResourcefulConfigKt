@@ -42,7 +42,7 @@ class KotlinConfigParser : ConfigParser {
         val properties: List<KProperty1<T, Any>> = klass.jvmOrderedProperties.filterIsInstance<KProperty1<T, Any>>()
         for (property in properties) {
             assertEntry(instance, property)?.let { data ->
-                val type = getEntryType(instance, property, data.type)
+                val type = getEntryType(instance, property)
                 if (type == EntryType.OBJECT) {
                     val subInstance = property.get(instance)
                     val objectEntry = KotlinObjectEntry(EntryData.of(property.annotationGetter, property.javaClass))
@@ -77,7 +77,7 @@ class KotlinConfigParser : ConfigParser {
         val properties: List<KProperty1<T, Any>> = klass.jvmOrderedProperties.filterIsInstance<KProperty1<T, Any>>()
         for (property in properties) {
             val data = assertEntry(instance, property) ?: continue
-            val type = getEntryType(instance, property, data.type)
+            val type = getEntryType(instance, property)
             val entry = if (type == EntryType.OBJECT) {
                 error("Entry ${property.name} cannot be an object!")
             } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
@@ -106,7 +106,7 @@ class KotlinConfigParser : ConfigParser {
         val data = property.getAnnotation<ConfigEntry>() ?: return null
         val name = property.name
         return collectErrors({ "Entry $name is invalid!\n\t$this\n" }) {
-            val type = getEntryType(instance, property, data.type)
+            val type = getEntryType(instance, property)
             val isObservable = property.returnType.isSubtypeOf(Observable::class.starProjectedType)
             if (!isObservable && type.mustBeFinal() == property is KMutableProperty<*>) add("Property ${property.name} in must be ${if (type.mustBeFinal()) "val" else "var"}")
             if (isObservable && property is KMutableProperty<*>) add("Property ${property.name} in must be val")
@@ -152,14 +152,14 @@ class KotlinConfigParser : ConfigParser {
         return type
     }
 
-    private fun <T : Any> getEntryType(instance: T, property: KProperty1<T, *>, defaultValue: EntryType): EntryType {
+    private fun <T : Any> getEntryType(instance: T, property: KProperty1<T, *>): EntryType {
         var fieldType: Class<*> = property.javaClass
         if (fieldType == Observable::class.java) fieldType = (property.get(instance) as Observable<*>).type()
         if (fieldType.isArray) fieldType = fieldType.componentType
-        return getEntryType(fieldType, defaultValue)
+        return getEntryType(fieldType)
     }
 
-    private fun getEntryType(type: Class<*>, defaultValue: EntryType): EntryType {
+    private fun getEntryType(type: Class<*>): EntryType {
         return when {
             type.getAnnotation(ConfigObject::class.java) != null -> EntryType.OBJECT
             type == java.lang.Long.TYPE || type == Long::class.java -> EntryType.LONG
@@ -171,7 +171,7 @@ class KotlinConfigParser : ConfigParser {
             type == java.lang.Boolean.TYPE || type == Boolean::class.java -> EntryType.BOOLEAN
             type == String::class.java -> EntryType.STRING
             type.isEnum -> EntryType.ENUM
-            else -> defaultValue
+            else -> error("Could not infer entry type for ${type.simpleName}")
         }
     }
 

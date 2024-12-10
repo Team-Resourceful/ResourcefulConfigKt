@@ -45,7 +45,7 @@ class KotlinConfigParser : ConfigParser {
                 val type = getEntryType(instance, property)
                 if (type == EntryType.OBJECT) {
                     val subInstance = property.get(instance)
-                    val objectEntry = KotlinObjectEntry(EntryData.of(property.annotationGetter, property.javaClass))
+                    val objectEntry = KotlinObjectEntry(subInstance, EntryData.of(property.annotationGetter, property.javaClass))
                     populateEntries(subInstance, objectEntry)
                     config.entries()[data.id] = objectEntry
                 } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {

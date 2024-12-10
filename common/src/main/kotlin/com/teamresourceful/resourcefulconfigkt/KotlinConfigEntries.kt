@@ -100,15 +100,16 @@ internal class KotlinConfigEntry<T>(
 }
 
 internal class KotlinObjectEntry(
+    private val instance: Any,
     private val options: EntryData,
     private val entries: LinkedHashMap<String, ResourcefulConfigEntry>,
 ) : ResourcefulConfigObjectEntry {
 
-    constructor(options: EntryData) : this(options, LinkedHashMap())
+    constructor(instance: Any, options: EntryData) : this(instance, options, LinkedHashMap())
 
     override fun type() = EntryType.OBJECT
     override fun options() = options
     override fun reset() = entries.values.forEach { it.reset() }
     override fun entries() = entries
-
+    override fun instance(): Any = instance
 }

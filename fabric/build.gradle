@@ -22,7 +22,7 @@ dependencies {
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 
-    modImplementation("com.teamresourceful.resourcefulconfig:resourcefulconfig-fabric-${mc_version}:${version}")
+    modImplementation("com.teamresourceful.resourcefulconfig:resourcefulconfig-fabric-${mc_version}:3.3.1")
     modImplementation("net.fabricmc:fabric-language-kotlin:1.11.0+kotlin.2.0.0")
 }
 

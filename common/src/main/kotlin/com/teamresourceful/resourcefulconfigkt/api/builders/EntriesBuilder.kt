@@ -3,10 +3,8 @@ package com.teamresourceful.resourcefulconfigkt.api.builders
 import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigEntry
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
-import com.teamresourceful.resourcefulconfigkt.KotlinConfigEntry
-import com.teamresourceful.resourcefulconfigkt.api.EntryDelegate
-import java.util.LinkedHashMap
-import kotlin.reflect.KProperty
+import com.teamresourceful.resourcefulconfigkt.api.Entry
+import com.teamresourceful.resourcefulconfigkt.api.ObservableEntry
 
 open class EntriesBuilder {
 
@@ -80,6 +78,8 @@ open class EntriesBuilder {
     fun <T : Enum<T>> draggable(vararg value: T, builder: DraggableBuilder<T>.() -> Unit = {}) = Entry(null, EntryType.ENUM, { DraggableBuilder(it, getEmptyArray<T>(value.javaClass)) }, builder, value)
     fun <T : Enum<T>> draggable(id: String, vararg value: T, builder: DraggableBuilder<T>.() -> Unit = {}) = Entry(id, EntryType.ENUM, { DraggableBuilder(it, getEmptyArray<T>(value.javaClass)) }, builder, value)
 
+    fun <T, B : TypeBuilder> observable(entry: Entry<T, B>, onChange: (T, T) -> Unit) = ObservableEntry(entry, onChange)
+
     companion object {
 
         fun Translated(key: String) : TranslatableValue = TranslatableValue("", key)
@@ -89,33 +89,5 @@ open class EntriesBuilder {
         private fun <T> getEmptyArray(arrayClass: Class<*>): Array<T> {
             return java.lang.reflect.Array.newInstance(arrayClass.componentType, 0) as Array<T>
         }
-    }
-}
-
-class Entry<T, B : TypeBuilder> internal constructor(
-    private val id: String?,
-    private val type: EntryType,
-    private val builderFactory: (String) -> B,
-    private val builderFiller: (B) -> Unit,
-    private val value: T,
-) {
-
-    operator fun provideDelegate(builder: EntriesBuilder, prop: KProperty<*>): EntryDelegate<T> {
-        val id = id ?: prop.name
-        require(id !in builder.entries) { "Entry with id $id already exists" }
-        require(id.isNotEmpty()) { "Entry id cannot be empty" }
-        require('.' !in id) { "Entry id $id cannot contain '.'" }
-
-        val property = EntryDelegate(this.value, this.value)
-        var data = builderFactory(id).apply(builderFiller).toEntryData()
-
-        builder.entries[id] = KotlinConfigEntry<Any>(
-            type,
-            { property.set(it as T) },
-            { property.get() as Any },
-            data,
-            value as Any
-        )
-        return property
     }
 }

@@ -2,28 +2,41 @@ package com.teamresourceful.resourcefulconfigkt.api.builders
 
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfig
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigButton
-import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigInfo
+import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigColor
+import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigLink
 import com.teamresourceful.resourcefulconfig.api.types.options.Position
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfig.common.info.ParsedColor
-import com.teamresourceful.resourcefulconfig.common.info.ParsedInfo
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfig.common.loader.buttons.ParsedButton
 import com.teamresourceful.resourcefulconfigkt.api.CategoryKt
+import com.teamresourceful.resourcefulconfigkt.api.ObjectKt
+import com.teamresourceful.resourcefulconfigkt.impl.ConfigKtInfo
+import kotlin.collections.contains
 
 open class CategoryBuilder internal constructor(internal val id: String) : EntriesBuilder() {
 
     internal val categories: LinkedHashMap<String, CategoryBuilder> = LinkedHashMap<String, CategoryBuilder>()
     internal val buttons: MutableList<ResourcefulConfigButton> = mutableListOf()
 
-    var name: TranslatableValue = TranslatableValue(id)
-    var description: TranslatableValue = TranslatableValue.EMPTY
-    var hidden: Boolean = false
+    open val name: TranslatableValue get() = TranslatableValue(id)
+    open val description: TranslatableValue get() = TranslatableValue.EMPTY
+    open val icon: String get() = "box"
+    open val color: ResourcefulConfigColor get() = ParsedColor.DEFAULT
+    open val links: Array<ResourcefulConfigLink> get() = emptyArray()
+    open val hidden: Boolean get() = false
 
-    var info: InfoBuilder? = null
+    fun <T : ObjectKt> obj(id: String, instance: T, builder: TypeBuilder.() -> Unit = {}): T {
+        require(id !in entries) { "Entry with id $id already exists" }
+        require(id.isNotEmpty()) { "Entry id cannot be empty" }
+        require('.' !in id) { "Entry id $id cannot contain '.'" }
+
+        entries[id] = instance.build(TypeBuilder(id).apply(builder).toEntryData())
+        return instance
+    }
 
     fun category(id: String, init: CategoryBuilder.() -> Unit = {}): CategoryBuilder {
-        val category = CategoryBuilder(id).apply(init)
+        val category = CategoryKt(id).apply(init)
         require(id !in categories) { "Category with id $id already exists" }
         categories[id] = category
         return category
@@ -47,29 +60,11 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
         ))
     }
 
-    internal fun buildInfo(): ResourcefulConfigInfo {
-        return ParsedInfo(
-            this.name,
-            this.description,
-            info?.icon,
-            info?.color ?: ParsedColor.DEFAULT,
-            info?.links ?: emptyArray(),
-            this.hidden
-        )
-    }
-
     internal open fun build(parent: ResourcefulConfig?): ResourcefulConfig {
-        val category = ParsedCategory(this.id, parent!!, this.buildInfo(), this.entries, LinkedHashMap<String, ResourcefulConfig>(), this.buttons)
+        val category = ParsedCategory(this.id, parent!!, ConfigKtInfo(this), this.entries, LinkedHashMap<String, ResourcefulConfig>(), this.buttons)
         for ((id, builder) in this.categories) {
             category.categories[id] = builder.build(category)
         }
         return category
-    }
-
-    companion object {
-
-        fun info(builder: InfoBuilder.() -> Unit): InfoBuilder {
-            return InfoBuilder().apply(builder)
-        }
     }
 }

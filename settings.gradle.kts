@@ -1,6 +1,6 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "ResourcefulConfig"
+rootProject.name = "ResourcefulConfigKt"
 
 pluginManagement {
     repositories {

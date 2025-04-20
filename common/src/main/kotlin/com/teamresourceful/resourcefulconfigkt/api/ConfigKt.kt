@@ -27,11 +27,12 @@ open class ConfigKt(
         return config
     }
 
-    fun register(configurator: Configurator) {
+    fun register(configurator: Configurator): ResourcefulConfig {
         require(!registered) { "Config already registered" }
 
-        configurator.register(build(null)) { event ->
-            this.patches.forEach(event::register)
-        }
+        val config = build(null)
+        configurator.register(config) { event -> this.patches.forEach(event::register) }
+
+        return config
     }
 }

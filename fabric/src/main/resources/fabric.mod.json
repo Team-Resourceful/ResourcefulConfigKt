@@ -16,6 +16,6 @@
   "environment": "*",
   "depends": {
     "fabric": "*",
-    "minecraft": ">=1.21-beta.4"
+    "minecraft": ">=1.21.5"
   }
 }

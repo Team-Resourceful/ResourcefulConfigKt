@@ -9,8 +9,8 @@ import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.common.info.ParsedInfo
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedConfig
-import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedButtonElement
-import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedEntryElement
+import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
@@ -49,15 +49,15 @@ class KotlinConfigParser : ConfigParser {
                     val subInstance = property.get(instance)
                     val objectEntry = KotlinObjectEntry(subInstance, EntryData.of(property.annotationGetter, property.javaClass))
                     populateEntries(subInstance, objectEntry)
-                    config.elements().add(ParsedEntryElement(data.id, objectEntry))
+                    config.elements().add(EntryElementKt(data.id, objectEntry))
                 } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
-                    config.elements().add(ParsedEntryElement(data.id, ParsedObservableEntry(type, property, instance)))
+                    config.elements().add(EntryElementKt(data.id, ParsedObservableEntry(type, property, instance)))
                 } else {
-                    config.elements().add(ParsedEntryElement(data.id, KotlinConfigEntry(type, property as KMutableProperty1<T, Any>, instance)))
+                    config.elements().add(EntryElementKt(data.id, KotlinConfigEntry(type, property as KMutableProperty1<T, Any>, instance)))
                 }
             }
             assertButton(instance, property)?.let { (data, runnable) ->
-                config.elements().add(ParsedButtonElement(
+                config.elements().add(ButtonElementKt(
                     data.title,
                     property.getAnnotation<Comment>()?.value ?: "",
                     runnable,
@@ -94,7 +94,7 @@ class KotlinConfigParser : ConfigParser {
 
             if (entry.defaultValue() == null) error("Entry ${property.name} has a null default value!")
 
-            config.entries()[data.id] = entry
+            config.elements().add(EntryElementKt(data.id, entry))
         }
     }
 

@@ -16,7 +16,8 @@
   "environment": "*",
   "depends": {
     "fabric": "*",
-    "minecraft": ">=1.21.5"
+    "minecraft": ">=1.21.5",
+    "resourcefulconfig": ">=3.5.2"
   },
   "custom": {
     "modmenu": {

@@ -1,6 +1,7 @@
 package com.teamresourceful.resourcefulconfigkt.api.builders
 
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigElement
+import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfigkt.api.Entry
@@ -12,6 +13,14 @@ open class EntriesBuilder {
     internal val elements = mutableListOf<ResourcefulConfigElement>()
 
     fun element(element: ResourcefulConfigElement) {
+        if (element is ResourcefulConfigEntryElement) {
+            val id = element.id()
+            require(id !in reserved) { "Entry with id $id already exists" }
+            require(id.isNotEmpty()) { "Entry id cannot be empty" }
+            require('.' !in id) { "Entry id $id cannot contain '.'" }
+
+            this.reserved.add(element.id())
+        }
         this.elements.add(element)
     }
 

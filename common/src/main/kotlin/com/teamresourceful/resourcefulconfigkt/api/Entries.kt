@@ -1,10 +1,10 @@
 package com.teamresourceful.resourcefulconfigkt.api
 
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
-import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedEntryElement
 import com.teamresourceful.resourcefulconfigkt.KotlinConfigEntry
 import com.teamresourceful.resourcefulconfigkt.api.builders.EntriesBuilder
 import com.teamresourceful.resourcefulconfigkt.api.builders.TypeBuilder
+import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
 import kotlin.reflect.KProperty
 
 class EntryDelegate<T> internal constructor(
@@ -54,7 +54,7 @@ class Entry<T, B : TypeBuilder> internal constructor(
         val property = EntryDelegate<T>(this.value, this.value)
 
         builder.reserved.add(id)
-        builder.elements.add(ParsedEntryElement(
+        builder.elements.add(EntryElementKt(
             id,
             KotlinConfigEntry<Any>(
                 type,

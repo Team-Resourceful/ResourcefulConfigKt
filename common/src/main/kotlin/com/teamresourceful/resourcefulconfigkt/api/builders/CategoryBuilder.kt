@@ -2,16 +2,16 @@ package com.teamresourceful.resourcefulconfigkt.api.builders
 
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfig
 import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigColor
+import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigColorValue
 import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigLink
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
-import com.teamresourceful.resourcefulconfig.common.info.ParsedColor
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
-import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedButtonElement
-import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedEntryElement
-import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedSeparator
 import com.teamresourceful.resourcefulconfigkt.api.CategoryKt
 import com.teamresourceful.resourcefulconfigkt.api.ObjectKt
+import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.ConfigKtInfo
+import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 
 open class CategoryBuilder internal constructor(internal val id: String) : EntriesBuilder() {
 
@@ -20,7 +20,7 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
     open val name: TranslatableValue get() = TranslatableValue(id)
     open val description: TranslatableValue get() = TranslatableValue.EMPTY
     open val icon: String get() = "box"
-    open val color: ResourcefulConfigColor get() = ParsedColor.DEFAULT
+    open val color: ResourcefulConfigColor get() = ResourcefulConfigColorValue.create("#ffffff")
     open val links: Array<ResourcefulConfigLink> get() = emptyArray()
     open val hidden: Boolean get() = false
 
@@ -30,7 +30,7 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
         require('.' !in id) { "Entry id $id cannot contain '.'" }
 
         reserved.add(id)
-        elements.add(ParsedEntryElement(id, instance.build(TypeBuilder(id).apply(builder).toEntryData())))
+        elements.add(EntryElementKt(id, instance.build(TypeBuilder(id).apply(builder).toEntryData())))
         return instance
     }
 
@@ -50,7 +50,7 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
     fun button(builder: ButtonBuilder.() -> Unit) {
         val button = ButtonBuilder().apply(builder)
         elements.add(
-            ParsedButtonElement(
+            ButtonElementKt(
                 button.title,
                 button.description,
                 button.callback::invoke,
@@ -62,7 +62,7 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
     fun separator(builder: SeparatorBuilder.() -> Unit) {
         val separator = SeparatorBuilder().apply(builder)
         elements.add(
-            ParsedSeparator(
+            SeparatorElementKt(
                 TranslatableValue("", separator.title),
                 TranslatableValue("", separator.description),
             )

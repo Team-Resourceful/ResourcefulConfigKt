@@ -20,7 +20,7 @@ open class ConfigKt(
     open val patches: Map<Int, UnaryOperator<JsonObject>> = mapOf()
 
     override fun build(parent: ResourcefulConfig?): ResourcefulConfig {
-        val config = ParsedConfig(this.version, this.file, ConfigKtInfo(this), this.entries, LinkedHashMap<String, ResourcefulConfig>(), this.buttons)
+        val config = ParsedConfig(this.version, this.file, ConfigKtInfo(this), this.elements, LinkedHashMap<String, ResourcefulConfig>())
         for ((id, builder) in this.categories) {
             config.categories[id] = builder.build(config)
         }

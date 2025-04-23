@@ -7,6 +7,6 @@ import com.teamresourceful.resourcefulconfigkt.KotlinObjectEntry
 open class ObjectBuilder internal constructor() : EntriesBuilder() {
 
     internal fun build(options: EntryData): ResourcefulConfigObjectEntry {
-        return KotlinObjectEntry(this, options, this.entries)
+        return KotlinObjectEntry(this, options, this.elements)
     }
 }

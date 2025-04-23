@@ -1,11 +1,10 @@
 package com.teamresourceful.resourcefulconfigkt.api
 
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
+import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedEntryElement
 import com.teamresourceful.resourcefulconfigkt.KotlinConfigEntry
 import com.teamresourceful.resourcefulconfigkt.api.builders.EntriesBuilder
 import com.teamresourceful.resourcefulconfigkt.api.builders.TypeBuilder
-import kotlin.collections.contains
-import kotlin.collections.set
 import kotlin.reflect.KProperty
 
 class EntryDelegate<T> internal constructor(
@@ -46,7 +45,7 @@ class Entry<T, B : TypeBuilder> internal constructor(
 
     operator fun provideDelegate(builder: EntriesBuilder, prop: KProperty<*>): EntryDelegate<T> {
         val id = id ?: prop.name
-        require(id !in builder.entries) { "Entry with id $id already exists" }
+        require(id !in builder.reserved) { "Entry with id $id already exists" }
         require(id.isNotEmpty()) { "Entry id cannot be empty" }
         require('.' !in id) { "Entry id $id cannot contain '.'" }
 
@@ -54,13 +53,17 @@ class Entry<T, B : TypeBuilder> internal constructor(
         var data = entryBuilder.toEntryData()
         val property = EntryDelegate<T>(this.value, this.value)
 
-        builder.entries[id] = KotlinConfigEntry<Any>(
-            type,
-            { property.set(it as T) },
-            { property.get() as Any },
-            data,
-            value as Any
-        )
+        builder.reserved.add(id)
+        builder.elements.add(ParsedEntryElement(
+            id,
+            KotlinConfigEntry<Any>(
+                type,
+                { property.set(it as T) },
+                { property.get() as Any },
+                data,
+                value as Any
+            )
+        ))
         return property
     }
 }

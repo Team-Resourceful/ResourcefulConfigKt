@@ -1,6 +1,7 @@
 package com.teamresourceful.resourcefulconfigkt
 
-import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigEntry
+import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigElement
+import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigObjectEntry
 import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigValueEntry
 import com.teamresourceful.resourcefulconfig.api.types.info.Translatable
@@ -105,14 +106,14 @@ internal class KotlinConfigEntry<T>(
 internal class KotlinObjectEntry(
     private val instance: Any,
     private val options: EntryData,
-    private val entries: LinkedHashMap<String, ResourcefulConfigEntry>,
+    private val elements: MutableList<ResourcefulConfigElement>
 ) : ResourcefulConfigObjectEntry {
 
-    constructor(instance: Any, options: EntryData) : this(instance, options, LinkedHashMap())
+    constructor(instance: Any, options: EntryData) : this(instance, options, mutableListOf<ResourcefulConfigElement>())
 
     override fun type() = EntryType.OBJECT
     override fun options() = options
-    override fun reset() = entries.values.forEach { it.reset() }
-    override fun entries() = entries
+    override fun reset() = elements.forEach { (it as? ResourcefulConfigEntryElement)?.entry()?.reset() }
+    override fun elements() = elements
     override fun getTitle(fallback: Component): Component = Translatable.toSpeifiedComponent(this.instance, fallback)
 }

@@ -1,13 +1,9 @@
 package com.teamresourceful.resourcefulconfigkt
 
-import com.teamresourceful.resourcefulconfig.api.annotations.Comment
-import com.teamresourceful.resourcefulconfig.api.annotations.ConfigButton
 import com.teamresourceful.resourcefulconfig.api.types.entries.Observable
 import com.teamresourceful.resourcefulconfig.api.types.options.AnnotationGetter
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryData
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
-import com.teamresourceful.resourcefulconfig.api.types.options.Position
-import com.teamresourceful.resourcefulconfig.common.loader.buttons.ParsedButton
 import com.teamresourceful.resourcefulconfig.common.loader.entries.ParsedObservableEntry
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
@@ -46,17 +42,6 @@ internal fun <T> ParsedObservableEntry(entryType: EntryType, property: KProperty
         observable,
         EntryData.of(property.annotationGetter, observable.type()),
         default
-    )
-}
-
-internal fun <T> ParsedButton(button: ConfigButton, target: String, property: KProperty1<T, *>, runnable: () -> Unit): ParsedButton {
-    return ParsedButton(
-        button.title,
-        property.getAnnotation<Comment>()?.value ?: "",
-        target,
-        Position.AFTER,
-        runnable,
-        button.text
     )
 }
 

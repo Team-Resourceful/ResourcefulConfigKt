@@ -1,6 +1,6 @@
 package com.teamresourceful.resourcefulconfigkt.api.builders
 
-import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigEntry
+import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigElement
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfigkt.api.Entry
@@ -8,7 +8,12 @@ import com.teamresourceful.resourcefulconfigkt.api.ObservableEntry
 
 open class EntriesBuilder {
 
-    internal val entries: LinkedHashMap<String, ResourcefulConfigEntry> = LinkedHashMap()
+    internal val reserved = mutableListOf<String>()
+    internal val elements = mutableListOf<ResourcefulConfigElement>()
+
+    fun element(element: ResourcefulConfigElement) {
+        this.elements.add(element)
+    }
 
     fun byte(value: Byte, builder: NumberBuilder<Byte>.() -> Unit = {}) = Entry(null, EntryType.BYTE, ::NumberBuilder, builder, value)
     fun byte(id: String, value: Byte, builder: NumberBuilder<Byte>.() -> Unit = {}) = Entry(id, EntryType.BYTE, ::NumberBuilder, builder, value)

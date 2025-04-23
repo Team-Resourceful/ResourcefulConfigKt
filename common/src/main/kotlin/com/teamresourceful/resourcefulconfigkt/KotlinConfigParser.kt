@@ -9,6 +9,8 @@ import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.common.info.ParsedInfo
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedConfig
+import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedButtonElement
+import com.teamresourceful.resourcefulconfig.common.loader.elements.ParsedEntryElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
@@ -47,16 +49,20 @@ class KotlinConfigParser : ConfigParser {
                     val subInstance = property.get(instance)
                     val objectEntry = KotlinObjectEntry(subInstance, EntryData.of(property.annotationGetter, property.javaClass))
                     populateEntries(subInstance, objectEntry)
-                    config.entries()[data.id] = objectEntry
+                    config.elements().add(ParsedEntryElement(data.id, objectEntry))
                 } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
-                    config.entries()[data.id] = ParsedObservableEntry(type, property, instance)
+                    config.elements().add(ParsedEntryElement(data.id, ParsedObservableEntry(type, property, instance)))
                 } else {
-                    config.entries()[data.id] = KotlinConfigEntry(type, property as KMutableProperty1<T, Any>, instance)
+                    config.elements().add(ParsedEntryElement(data.id, KotlinConfigEntry(type, property as KMutableProperty1<T, Any>, instance)))
                 }
             }
             assertButton(instance, property)?.let { (data, runnable) ->
-                val target = config.entries().lastEntry()?.key ?: ""
-                config.buttons().add(ParsedButton(data, target, property, runnable))
+                config.elements().add(ParsedButtonElement(
+                    data.title,
+                    property.getAnnotation<Comment>()?.value ?: "",
+                    runnable,
+                    data.text
+                ))
             }
         }
 

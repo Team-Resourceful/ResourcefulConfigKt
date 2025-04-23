@@ -5,21 +5,30 @@ import com.teamresourceful.resourcefulconfig.api.types.options.EntryData
 import com.teamresourceful.resourcefulconfig.api.types.options.Option
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
-open class TypeBuilder internal constructor(id: String) {
+open class TypeBuilder internal constructor(private val id: String) {
 
     var name: TranslatableValue = TranslatableValue(id)
     var description: TranslatableValue = TranslatableValue.EMPTY
     var hidden: Boolean = false
+    var renderer: ResourceLocation? = null
+
+    var translation: String
+        get() = ""
+        set(value) {
+            this.name = TranslatableValue(this.id, value)
+            this.description = TranslatableValue("", "$value.desc")
+        }
 
     internal fun toEntryData(): EntryData = EntryData(
         name, description,
-        buildMap<Option<*, *>, Any?>(::buildOptions)
-            .filter { entry -> entry.value != null }
+        buildMap<Option<*, *>, Any?>(::buildOptions).filter { entry -> entry.value != null }
     )
 
     protected open fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         options.put(Option.HIDDEN, if (this.hidden) ConfigOption.Hidden() else null)
+        options.put(Option.RENDERER, this.renderer)
     }
 }
 
@@ -103,4 +112,10 @@ class ButtonBuilder {
     fun onClick(callback: () -> Unit) {
         this.callback = callback
     }
+}
+
+class SeparatorBuilder {
+
+    var title: String = ""
+    var description: String = ""
 }

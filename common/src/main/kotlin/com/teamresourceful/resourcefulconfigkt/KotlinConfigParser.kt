@@ -6,11 +6,13 @@ import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfig
 import com.teamresourceful.resourcefulconfig.api.types.entries.Observable
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryData
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
+import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfig.common.info.ParsedInfo
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedConfig
 import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
@@ -45,6 +47,16 @@ class KotlinConfigParser : ConfigParser {
         for (property in properties) {
             assertEntry(instance, property)?.let { data ->
                 val type = getEntryType(instance, property)
+
+                val separator = property.annotationGetter.get(ConfigOption.Separator::class.java)
+                if (separator != null) {
+                    config.elements().add(SeparatorElementKt(
+                        TranslatableValue("", separator.value),
+                        TranslatableValue("", separator.description),
+                        { true }
+                    ))
+                }
+
                 if (type == EntryType.OBJECT) {
                     val subInstance = property.get(instance)
                     val objectEntry = KotlinObjectEntry(subInstance, EntryData.of(property.annotationGetter, property.javaClass))
@@ -61,7 +73,8 @@ class KotlinConfigParser : ConfigParser {
                     data.title,
                     property.getAnnotation<Comment>()?.value ?: "",
                     runnable,
-                    data.text
+                    { true },
+                    data.text,
                 ))
             }
         }

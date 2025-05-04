@@ -29,8 +29,10 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
         require(id.isNotEmpty()) { "Entry id cannot be empty" }
         require('.' !in id) { "Entry id $id cannot contain '.'" }
 
+        val builder = TypeBuilder(id).apply(builder)
+
         reserved.add(id)
-        elements.add(EntryElementKt(id, instance.build(TypeBuilder(id).apply(builder).toEntryData())))
+        elements.add(EntryElementKt(id, builder, instance.build(builder.toEntryData())))
         return instance
     }
 
@@ -54,6 +56,7 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
                 button.title,
                 button.description,
                 button.callback::invoke,
+                button.condition,
                 button.text,
             )
         )
@@ -65,6 +68,7 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
             SeparatorElementKt(
                 TranslatableValue("", separator.title),
                 TranslatableValue("", separator.description),
+                separator.condition,
             )
         )
     }

@@ -56,6 +56,7 @@ class Entry<T, B : TypeBuilder> internal constructor(
         builder.reserved.add(id)
         builder.elements.add(EntryElementKt(
             id,
+            entryBuilder,
             KotlinConfigEntry<Any>(
                 type,
                 { property.set(it as T) },

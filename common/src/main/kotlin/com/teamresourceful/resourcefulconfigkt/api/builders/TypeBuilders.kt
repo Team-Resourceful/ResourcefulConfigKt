@@ -11,8 +11,10 @@ open class TypeBuilder internal constructor(private val id: String) {
 
     var name: TranslatableValue = TranslatableValue(id)
     var description: TranslatableValue = TranslatableValue.EMPTY
-    var hidden: Boolean = false
     var renderer: ResourceLocation? = null
+    var condition: () -> Boolean = { true }
+    @Deprecated("Use condition instead")
+    var hidden: Boolean = false
 
     var translation: String
         get() = ""
@@ -107,6 +109,7 @@ class ButtonBuilder {
     var title: String = ""
     var description: String = ""
     var text: String? = null
+    var condition: () -> Boolean = { true }
     internal var callback: () -> Unit = {}
 
     fun onClick(callback: () -> Unit) {
@@ -118,4 +121,5 @@ class SeparatorBuilder {
 
     var title: String = ""
     var description: String = ""
+    var condition: () -> Boolean = { true }
 }

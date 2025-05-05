@@ -42,7 +42,7 @@ internal data class EntryElementKt(
 
     override fun id(): String = id
     override fun entry(): ResourcefulConfigEntry = entry
-    override fun isHidden(): Boolean = !condition()
+    override fun isHidden(): Boolean = !condition() || super.isHidden
 }
 
 internal data class ButtonElementKt(

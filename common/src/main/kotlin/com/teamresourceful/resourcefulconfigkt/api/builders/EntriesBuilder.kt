@@ -6,6 +6,7 @@ import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfigkt.api.Entry
 import com.teamresourceful.resourcefulconfigkt.api.ObservableEntry
+import com.teamresourceful.resourcefulconfigkt.api.TransformedEntry
 
 open class EntriesBuilder {
 
@@ -93,6 +94,7 @@ open class EntriesBuilder {
     fun <T : Enum<T>> draggable(id: String, vararg value: T, builder: DraggableBuilder<T>.() -> Unit = {}) = Entry(id, EntryType.ENUM, { DraggableBuilder(it, getEmptyArray<T>(value.javaClass)) }, builder, value)
 
     fun <T, B : TypeBuilder> observable(entry: Entry<T, B>, onChange: (T, T) -> Unit) = ObservableEntry(entry, onChange)
+    fun <T, B : TypeBuilder, R> transform(entry: Entry<T, B>, from: (R) -> T, to: (T) -> R) = TransformedEntry(entry, from, to)
 
     companion object {
 

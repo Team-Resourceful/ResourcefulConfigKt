@@ -35,6 +35,27 @@ class EntryDelegate<T> internal constructor(
     }
 }
 
+class TransformedEntryDelegate<T, R> internal constructor(
+    private val parent: EntryDelegate<T>,
+    private val from: (R) -> T,
+    private val to: (T) -> R,
+) {
+
+    private var value: R = to(parent.get())
+
+    init {
+        parent.onChange = { old, new ->
+            value = to(new)
+        }
+    }
+
+    operator fun getValue(thisRef: Any?, property: Any?): R = value
+    operator fun setValue(thisRef: Any?, property: Any?, value: R) {
+        parent.set(from(value))
+        this.value = value
+    }
+}
+
 class Entry<T, B : TypeBuilder> internal constructor(
     private val id: String?,
     private val type: EntryType,
@@ -77,5 +98,16 @@ class ObservableEntry<T, B : TypeBuilder>(
         val property = entry.provideDelegate(builder, prop)
         property.onChange = onChange
         return property
+    }
+}
+
+class TransformedEntry<T, B : TypeBuilder, R>(
+    private val entry: Entry<T, B>,
+    private val from: (R) -> T,
+    private val to: (T) -> R,
+) {
+    operator fun provideDelegate(builder: EntriesBuilder, prop: KProperty<*>): TransformedEntryDelegate<T, R> {
+        val property = entry.provideDelegate(builder, prop)
+        return TransformedEntryDelegate(property, from, to)
     }
 }

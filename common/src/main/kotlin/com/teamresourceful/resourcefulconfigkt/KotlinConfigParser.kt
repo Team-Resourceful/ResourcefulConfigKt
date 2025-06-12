@@ -12,6 +12,7 @@ import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedConfig
 import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
@@ -61,7 +62,7 @@ class KotlinConfigParser : ConfigParser {
                     val subInstance = property.get(instance)
                     val objectEntry = KotlinObjectEntry(subInstance, EntryData.of(property.annotationGetter, property.javaClass))
                     populateEntries(subInstance, objectEntry)
-                    config.elements().add(EntryElementKt(data.id, objectEntry))
+                    config.elements().add(ObjectEntryElementKt(data.id, objectEntry))
                 } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
                     config.elements().add(EntryElementKt(data.id, ParsedObservableEntry(type, property, instance)))
                 } else {

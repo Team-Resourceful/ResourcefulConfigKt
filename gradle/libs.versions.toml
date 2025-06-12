@@ -7,7 +7,7 @@ neoforge = "21.5.0-beta"
 
 # Libraries
 modmenu = "14.0.0-rc.2"
-resourceful-config = "3.5.3"
+resourceful-config = "3.5.8"
 
 # Plugins
 resourceful-loom = "1.0.4"

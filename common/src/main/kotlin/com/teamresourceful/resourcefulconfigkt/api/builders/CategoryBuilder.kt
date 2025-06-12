@@ -8,9 +8,10 @@ import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfigkt.api.CategoryKt
 import com.teamresourceful.resourcefulconfigkt.api.ObjectKt
+import com.teamresourceful.resourcefulconfigkt.api.ObjectProperty
 import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.ConfigKtInfo
-import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 
 open class CategoryBuilder internal constructor(internal val id: String) : EntriesBuilder() {
@@ -25,15 +26,13 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
     open val hidden: Boolean get() = false
 
     fun <T : ObjectKt> obj(id: String, instance: T, builder: TypeBuilder.() -> Unit = {}): T {
-        require(id !in reserved) { "Entry with id $id already exists" }
-        require(id.isNotEmpty()) { "Entry id cannot be empty" }
-        require('.' !in id) { "Entry id $id cannot contain '.'" }
-
         val builder = TypeBuilder(id).apply(builder)
-
-        reserved.add(id)
-        elements.add(EntryElementKt(id, builder, instance.build(builder.toEntryData())))
+        element(ObjectEntryElementKt(id, builder, instance.build(builder.toEntryData())))
         return instance
+    }
+
+    fun <T : ObjectKt> obj(instance: T, builder: TypeBuilder.() -> Unit = {}): ObjectProperty<T> {
+        return ObjectProperty(instance, builder)
     }
 
     fun category(id: String, init: CategoryBuilder.() -> Unit = {}): CategoryBuilder {

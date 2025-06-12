@@ -2,8 +2,10 @@ package com.teamresourceful.resourcefulconfigkt.impl
 
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigButton
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
+import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigObjectEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigSeparatorElement
 import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigEntry
+import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigObjectEntry
 import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigInfo
 import com.teamresourceful.resourcefulconfig.api.types.options.Option
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
@@ -42,6 +44,29 @@ internal data class EntryElementKt(
 
     override fun id(): String = id
     override fun entry(): ResourcefulConfigEntry = entry
+    override fun isHidden(): Boolean = !condition() || super.isHidden
+}
+
+internal data class ObjectEntryElementKt(
+    val id: String,
+    val condition: () -> Boolean,
+    val entry: ResourcefulConfigObjectEntry
+) : ResourcefulConfigObjectEntryElement {
+
+    constructor(id: String, entry: ResourcefulConfigObjectEntry) : this(
+        id,
+        { !entry.options().hasOption(Option.HIDDEN) },
+        entry
+    )
+
+    constructor(id: String, builder: TypeBuilder, entry: ResourcefulConfigObjectEntry) : this(
+        id,
+        builder.condition,
+        entry
+    )
+
+    override fun id(): String = id
+    override fun entry(): ResourcefulConfigObjectEntry = entry
     override fun isHidden(): Boolean = !condition() || super.isHidden
 }
 

@@ -5,6 +5,7 @@ import com.teamresourceful.resourcefulconfigkt.KotlinConfigEntry
 import com.teamresourceful.resourcefulconfigkt.api.builders.EntriesBuilder
 import com.teamresourceful.resourcefulconfigkt.api.builders.TypeBuilder
 import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
 import kotlin.reflect.KProperty
 
 class EntryDelegate<T> internal constructor(
@@ -66,16 +67,11 @@ class Entry<T, B : TypeBuilder> internal constructor(
 
     operator fun provideDelegate(builder: EntriesBuilder, prop: KProperty<*>): EntryDelegate<T> {
         val id = id ?: prop.name
-        require(id !in builder.reserved) { "Entry with id $id already exists" }
-        require(id.isNotEmpty()) { "Entry id cannot be empty" }
-        require('.' !in id) { "Entry id $id cannot contain '.'" }
-
         val entryBuilder = builderFactory(id).apply(builderFiller)
         var data = entryBuilder.toEntryData()
         val property = EntryDelegate<T>(this.value, this.value)
 
-        builder.reserved.add(id)
-        builder.elements.add(EntryElementKt(
+        builder.element(EntryElementKt(
             id,
             entryBuilder,
             KotlinConfigEntry<Any>(
@@ -110,4 +106,17 @@ class TransformedEntry<T, B : TypeBuilder, R>(
         val property = entry.provideDelegate(builder, prop)
         return TransformedEntryDelegate(property, from, to)
     }
+}
+
+class ObjectProperty<T : ObjectKt>(
+    val instance: T,
+    val factory: TypeBuilder.() -> Unit = {}
+) {
+
+    operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): Lazy<T> {
+        val builder = TypeBuilder(prop.name).apply(factory)
+        entries.element(ObjectEntryElementKt(prop.name, builder, instance.build(builder.toEntryData())))
+        return lazyOf(instance)
+    }
+
 }

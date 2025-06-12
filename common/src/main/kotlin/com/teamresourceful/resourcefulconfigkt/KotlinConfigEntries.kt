@@ -116,4 +116,5 @@ internal class KotlinObjectEntry(
     override fun reset() = elements.forEach { (it as? ResourcefulConfigEntryElement)?.entry()?.reset() }
     override fun elements() = elements
     override fun getTitle(fallback: Component): Component = Translatable.toSpeifiedComponent(this.instance, fallback)
+    override fun instance(): Any? = instance
 }

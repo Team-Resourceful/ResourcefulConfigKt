@@ -8,22 +8,24 @@ import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
 import kotlin.reflect.KProperty
 
-class EntryDelegate<T> internal constructor(
+class EntryDelegate<T> internal constructor(entry: RConfigKtEntry<T>): RConfigKtEntry<T> by entry
+
+class EntryDelegateImpl<T> internal constructor(
     private val default: T,
     private var value: T,
 ) : RConfigKtEntry<T> {
 
     override var onChange: (T, T) -> Unit = { _, _ -> }
-    override val parent: EntryDelegate<T> = this
+    override val parent: EntryDelegateImpl<T> = this
 
     override operator fun getValue(thisRef: Any?, property: Any?): T = get()
     override operator fun setValue(thisRef: Any?, property: Any?, value: T) = set(value)
 
-    fun get(): T {
+    override fun get(): T {
         return value
     }
 
-    fun set(newValue: T) {
+    override fun set(newValue: T) {
         val oldValue = this.value
         this.value = newValue
 
@@ -32,7 +34,7 @@ class EntryDelegate<T> internal constructor(
         }
     }
 
-    fun reset() {
+    override fun reset() {
         this.value = default
     }
 }
@@ -51,6 +53,10 @@ class TransformedEntryDelegate<T, R> internal constructor(
             actualParent.onChange = { p1, p2 -> value(to(p1), to(p2))}
         }
 
+    override fun get(): R = to(actualParent.get())
+    override fun set(newValue: R) = actualParent.set(from(newValue))
+    override fun reset() = actualParent.reset()
+
     override operator fun getValue(thisRef: Any?, property: Any?): R = to(actualParent.getValue(thisRef, property))
     override operator fun setValue(thisRef: Any?, property: Any?, value: R) = actualParent.setValue(thisRef, property, from(value))
 }
@@ -67,7 +73,7 @@ class Entry<T, B : TypeBuilder> internal constructor(
         val id = id ?: prop.name
         val entryBuilder = builderFactory(id).apply(builderFiller)
         val data = entryBuilder.toEntryData()
-        val property = EntryDelegate<T>(this.value, this.value)
+        val property = EntryDelegateImpl<T>(this.value, this.value)
 
         entries.element(
             EntryElementKt(
@@ -82,7 +88,7 @@ class Entry<T, B : TypeBuilder> internal constructor(
                 )
             )
         )
-        return property
+        return EntryDelegate(property)
     }
 }
 
@@ -90,10 +96,10 @@ class ObservableEntry<T>(
     private val entry: ConfigDelegateProvider<RConfigKtEntry<T>>,
     private val onChange: (T, T) -> Unit,
 ) : ConfigDelegateProvider<RConfigKtEntry<T>> {
-    override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): RConfigKtEntry<T> {
+    override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): EntryDelegate<T> {
         val property = entry.provideDelegate(entries, prop)
         property.onChange = onChange
-        return property
+        return EntryDelegate(property)
     }
 }
 
@@ -102,7 +108,7 @@ class TransformedEntry<T, R>(
     private val from: (R) -> T,
     private val to: (T) -> R,
 ) : ConfigDelegateProvider<RConfigKtEntry<R>> {
-    override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): RConfigKtEntry<R> {
+    override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): TransformedEntryDelegate<T, R> {
         val property = entry.provideDelegate(entries, prop)
         return TransformedEntryDelegate(property.parent, from, to)
     }
@@ -122,6 +128,11 @@ class ObjectProperty<T : ObjectKt>(
 interface RConfigKtEntry<T> {
     val parent: RConfigKtEntry<T>
     var onChange: (T, T) -> Unit
+
+    fun get(): T
+    fun set(newValue: T)
+    fun reset()
+
     operator fun getValue(thisRef: Any?, property: Any?): T
     operator fun setValue(thisRef: Any?, property: Any?, value: T)
 }

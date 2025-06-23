@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Range
 import java.util.function.UnaryOperator
 
 open class ConfigKt(
-    @Pattern("^[a-z0-9_/-]+$") private val file: String
+    @Pattern("^[a-z0-9_/-]+$") private val file: String,
 ) : CategoryBuilder(file) {
 
     private var registered: Boolean = false
@@ -20,7 +20,13 @@ open class ConfigKt(
     open val patches: Map<Int, UnaryOperator<JsonObject>> = mapOf()
 
     override fun build(parent: ResourcefulConfig?): ResourcefulConfig {
-        val config = ParsedConfig(this.version, this.file, ConfigKtInfo(this), this.elements, LinkedHashMap<String, ResourcefulConfig>())
+        val config = ParsedConfig(
+            this.version,
+            this.file,
+            ConfigKtInfo(this),
+            this.elements,
+            LinkedHashMap<String, ResourcefulConfig>()
+        )
         for ((id, builder) in this.categories) {
             config.categories[id] = builder.build(config)
         }

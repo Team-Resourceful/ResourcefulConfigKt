@@ -13,6 +13,8 @@ open class TypeBuilder internal constructor(private val id: String) {
     var description: TranslatableValue = TranslatableValue.EMPTY
     var renderer: ResourceLocation? = null
     var condition: () -> Boolean = { true }
+    var searchTerms: List<String> = emptyList()
+
     @Deprecated("Use condition instead")
     var hidden: Boolean = false
 
@@ -31,6 +33,7 @@ open class TypeBuilder internal constructor(private val id: String) {
     protected open fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         options.put(Option.HIDDEN, if (this.hidden) ConfigOption.Hidden() else null)
         options.put(Option.RENDERER, this.renderer)
+        options.put(Option.SEARCH_TERM, this.searchTerms)
     }
 }
 

@@ -34,32 +34,46 @@ class EntryDelegateImpl<T> internal constructor(
         }
     }
 
-    override fun reset() {
-        this.value = default
-    }
+    override fun reset() = set(default)
 }
 
 class TransformedEntryDelegate<T, R> internal constructor(
-    val actualParent: RConfigKtEntry<T>,
+    private val actualParent: RConfigKtEntry<T>,
     private val from: (R) -> T,
     private val to: (T) -> R,
 ) : RConfigKtEntry<R> {
 
     override val parent: RConfigKtEntry<R> = this
 
-    override var onChange: (R, R) -> Unit
-        get() = { p1, p2 -> actualParent.onChange(from(p1), from(p2)) }
-        set(value) {
-            actualParent.onChange = { p1, p2 -> value(to(p1), to(p2))}
+    private fun getActual() = actualParent.get()
+
+    private var value: R = to(getActual())
+
+    override var onChange: (R, R) -> Unit = { _, _ -> }
+
+    override fun get(): R = value
+
+    override fun set(newValue: R) {
+        val oldValue = this.value
+        this.value = newValue
+        actualParent.set(from(newValue))
+        if (oldValue == value) return
+        onChange(oldValue, value)
+    }
+
+    override fun reset() {
+        actualParent.reset()
+        val oldValue = value
+        value = to(getActual())
+        if (oldValue != value) {
+            onChange(oldValue, value)
         }
+    }
 
-    override fun get(): R = to(actualParent.get())
-    override fun set(newValue: R) = actualParent.set(from(newValue))
-    override fun reset() = actualParent.reset()
-
-    override operator fun getValue(thisRef: Any?, property: Any?): R = to(actualParent.getValue(thisRef, property))
-    override operator fun setValue(thisRef: Any?, property: Any?, value: R) = actualParent.setValue(thisRef, property, from(value))
+    override operator fun getValue(thisRef: Any?, property: Any?): R = value
+    override operator fun setValue(thisRef: Any?, property: Any?, value: R) = set(value)
 }
+
 
 class Entry<T, B : TypeBuilder> internal constructor(
     private val id: String?,

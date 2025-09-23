@@ -35,37 +35,32 @@ class EntryDelegateImpl<T> internal constructor(
 }
 
 class TransformedEntryDelegate<T, R> internal constructor(
-    private val actualParent: RConfigKtEntry<T>,
+    val actualParent: RConfigKtEntry<T>,
     private val from: (R) -> T,
     private val to: (T) -> R,
 ) : RConfigKtEntry<R> {
 
     override val parent: RConfigKtEntry<R> = this
 
-    private fun getActual() = actualParent.get()
-
-    private var value: R = to(getActual())
+    private var value: R = to(actualParent.get())
 
     override var onChange: (R, R) -> Unit = { _, _ -> }
 
-    override fun get(): R = value
-
-    override fun set(newValue: R) {
-        val oldValue = this.value
-        this.value = newValue
-        actualParent.set(from(newValue))
-        if (oldValue == value) return
-        onChange(oldValue, value)
-    }
-
-    override fun reset() {
-        actualParent.reset()
-        val oldValue = value
-        value = to(getActual())
-        if (oldValue != value) {
-            onChange(oldValue, value)
+    init {
+        val parentOnChange = actualParent.onChange
+        actualParent.onChange = { old, new ->
+            parentOnChange(old, new)
+            val oldValue = value
+            this.value = to(new)
+            if (oldValue != value) onChange(oldValue, value)
         }
     }
+
+    override fun get(): R = value
+
+    override fun set(newValue: R) = actualParent.set(from(newValue))
+
+    override fun reset() = actualParent.reset()
 }
 
 

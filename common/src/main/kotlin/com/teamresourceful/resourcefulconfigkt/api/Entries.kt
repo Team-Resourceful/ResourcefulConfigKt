@@ -18,9 +18,6 @@ class EntryDelegateImpl<T> internal constructor(
     override var onChange: (T, T) -> Unit = { _, _ -> }
     override val parent: EntryDelegateImpl<T> = this
 
-    override operator fun getValue(thisRef: Any?, property: Any?): T = get()
-    override operator fun setValue(thisRef: Any?, property: Any?, value: T) = set(value)
-
     override fun get(): T {
         return value
     }
@@ -69,9 +66,6 @@ class TransformedEntryDelegate<T, R> internal constructor(
             onChange(oldValue, value)
         }
     }
-
-    override operator fun getValue(thisRef: Any?, property: Any?): R = value
-    override operator fun setValue(thisRef: Any?, property: Any?, value: R) = set(value)
 }
 
 
@@ -147,8 +141,8 @@ interface RConfigKtEntry<T> {
     fun set(newValue: T)
     fun reset()
 
-    operator fun getValue(thisRef: Any?, property: Any?): T
-    operator fun setValue(thisRef: Any?, property: Any?, value: T)
+    operator fun getValue(thisRef: Any?, property: Any?): T = get()
+    operator fun setValue(thisRef: Any?, property: Any?, value: T) = set(value)
 }
 
 interface ConfigDelegateProvider<D> {

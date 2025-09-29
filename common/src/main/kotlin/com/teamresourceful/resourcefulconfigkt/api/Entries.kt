@@ -18,9 +18,6 @@ class EntryDelegateImpl<T> internal constructor(
     override var onChange: (T, T) -> Unit = { _, _ -> }
     override val parent: EntryDelegateImpl<T> = this
 
-    override operator fun getValue(thisRef: Any?, property: Any?): T = get()
-    override operator fun setValue(thisRef: Any?, property: Any?, value: T) = set(value)
-
     override fun get(): T {
         return value
     }
@@ -34,9 +31,7 @@ class EntryDelegateImpl<T> internal constructor(
         }
     }
 
-    override fun reset() {
-        this.value = default
-    }
+    override fun reset() = set(default)
 }
 
 class TransformedEntryDelegate<T, R> internal constructor(
@@ -47,19 +42,27 @@ class TransformedEntryDelegate<T, R> internal constructor(
 
     override val parent: RConfigKtEntry<R> = this
 
-    override var onChange: (R, R) -> Unit
-        get() = { p1, p2 -> actualParent.onChange(from(p1), from(p2)) }
-        set(value) {
-            actualParent.onChange = { p1, p2 -> value(to(p1), to(p2))}
+    private var value: R = to(actualParent.get())
+
+    override var onChange: (R, R) -> Unit = { _, _ -> }
+
+    init {
+        val parentOnChange = actualParent.onChange
+        actualParent.onChange = { old, new ->
+            parentOnChange(old, new)
+            val oldValue = value
+            this.value = to(new)
+            if (oldValue != value) onChange(oldValue, value)
         }
+    }
 
-    override fun get(): R = to(actualParent.get())
+    override fun get(): R = value
+
     override fun set(newValue: R) = actualParent.set(from(newValue))
-    override fun reset() = actualParent.reset()
 
-    override operator fun getValue(thisRef: Any?, property: Any?): R = to(actualParent.getValue(thisRef, property))
-    override operator fun setValue(thisRef: Any?, property: Any?, value: R) = actualParent.setValue(thisRef, property, from(value))
+    override fun reset() = actualParent.reset()
 }
+
 
 class Entry<T, B : TypeBuilder> internal constructor(
     private val id: String?,
@@ -133,8 +136,8 @@ interface RConfigKtEntry<T> {
     fun set(newValue: T)
     fun reset()
 
-    operator fun getValue(thisRef: Any?, property: Any?): T
-    operator fun setValue(thisRef: Any?, property: Any?, value: T)
+    operator fun getValue(thisRef: Any?, property: Any?): T = get()
+    operator fun setValue(thisRef: Any?, property: Any?, value: T) = set(value)
 }
 
 interface ConfigDelegateProvider<D> {

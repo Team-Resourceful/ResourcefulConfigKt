@@ -42,7 +42,26 @@ class TransformedEntryDelegate<T, R> internal constructor(
 
     override val parent: RConfigKtEntry<R> = this
 
-    private var value: R = to(actualParent.get())
+    override var onChange: (R, R) -> Unit
+        get() = { p1, p2 -> actualParent.onChange(from(p1), from(p2)) }
+        set(value) {
+            actualParent.onChange = { p1, p2 -> value(to(p1), to(p2))}
+        }
+
+    override fun get(): R = to(actualParent.get())
+    override fun set(newValue: R) = actualParent.set(from(newValue))
+    override fun reset() = actualParent.reset()
+}
+
+class CachedTransformedEntryDelegate<T, R> internal constructor(
+    private val actualParent: RConfigKtEntry<T>,
+    private val from: (R) -> T,
+    private val to: (T) -> R,
+) : RConfigKtEntry<R> {
+
+    private var cached: R = to(actualParent.get())
+
+    override val parent: RConfigKtEntry<R> = this
 
     override var onChange: (R, R) -> Unit = { _, _ -> }
 
@@ -50,16 +69,14 @@ class TransformedEntryDelegate<T, R> internal constructor(
         val parentOnChange = actualParent.onChange
         actualParent.onChange = { old, new ->
             parentOnChange(old, new)
-            val oldValue = value
-            this.value = to(new)
-            if (oldValue != value) onChange(oldValue, value)
+            val oldValue = cached
+            this.cached = to(new)
+            if (oldValue != cached) onChange(oldValue, cached)
         }
     }
 
-    override fun get(): R = value
-
+    override fun get(): R = cached
     override fun set(newValue: R) = actualParent.set(from(newValue))
-
     override fun reset() = actualParent.reset()
 }
 
@@ -103,6 +120,17 @@ class ObservableEntry<T>(
         val property = entry.provideDelegate(entries, prop)
         property.onChange = onChange
         return EntryDelegate(property)
+    }
+}
+
+class CachedTransformedEntry<T, R>(
+    private val entry: ConfigDelegateProvider<RConfigKtEntry<T>>,
+    private val from: (R) -> T,
+    private val to: (T) -> R,
+) : ConfigDelegateProvider<RConfigKtEntry<R>> {
+    override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): CachedTransformedEntryDelegate<T, R> {
+        val property = entry.provideDelegate(entries, prop)
+        return CachedTransformedEntryDelegate(property.parent, from, to)
     }
 }
 

@@ -4,6 +4,7 @@ import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigElement
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
+import com.teamresourceful.resourcefulconfigkt.api.CachedTransformedEntry
 import com.teamresourceful.resourcefulconfigkt.api.ConfigDelegateProvider
 import com.teamresourceful.resourcefulconfigkt.api.Entry
 import com.teamresourceful.resourcefulconfigkt.api.RConfigKtEntry
@@ -99,6 +100,8 @@ open class EntriesBuilder {
     fun <T> observable(entry: ConfigDelegateProvider<RConfigKtEntry<T>>, onChange: (T, T) -> Unit) = ObservableEntry(entry, onChange)
     fun <T, R> transform(entry: Entry<T, *>, from: (R) -> T, to: (T) -> R) = TransformedEntry(entry, from, to)
     fun <T, R> transform(entry: ConfigDelegateProvider<RConfigKtEntry<T>>, from: (R) -> T, to: (T) -> R) = TransformedEntry(entry, from, to)
+    fun <T, R> cachedTransform(entry: Entry<T, *>, from: (R) -> T, to: (T) -> R) = CachedTransformedEntry(entry, from, to)
+    fun <T, R> cachedTransform(entry: ConfigDelegateProvider<RConfigKtEntry<T>>, from: (R) -> T, to: (T) -> R) = CachedTransformedEntry(entry, from, to)
 
     companion object {
 

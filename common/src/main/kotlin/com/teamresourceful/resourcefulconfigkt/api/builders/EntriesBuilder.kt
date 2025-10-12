@@ -4,17 +4,16 @@ import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigElement
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
-import com.teamresourceful.resourcefulconfigkt.api.CachedTransformedEntry
-import com.teamresourceful.resourcefulconfigkt.api.ConfigDelegateProvider
-import com.teamresourceful.resourcefulconfigkt.api.Entry
-import com.teamresourceful.resourcefulconfigkt.api.RConfigKtEntry
-import com.teamresourceful.resourcefulconfigkt.api.ObservableEntry
-import com.teamresourceful.resourcefulconfigkt.api.TransformedEntry
+import com.teamresourceful.resourcefulconfigkt.api.*
+import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 
 open class EntriesBuilder {
 
     internal val reserved = mutableListOf<String>()
     internal val elements = mutableListOf<ResourcefulConfigElement>()
+    open val baseTranslation: String = ""
+        get() = field.removeSuffix(".")
 
     fun element(element: ResourcefulConfigElement) {
         if (element is ResourcefulConfigEntryElement) {
@@ -95,6 +94,29 @@ open class EntriesBuilder {
 
     fun <T : Enum<T>> draggable(vararg value: T, builder: DraggableBuilder<T>.() -> Unit = {}) = Entry(null, EntryType.ENUM, { DraggableBuilder(it, getEmptyArray<T>(value.javaClass)) }, builder, value)
     fun <T : Enum<T>> draggable(id: String, vararg value: T, builder: DraggableBuilder<T>.() -> Unit = {}) = Entry(id, EntryType.ENUM, { DraggableBuilder(it, getEmptyArray<T>(value.javaClass)) }, builder, value)
+
+    fun button(builder: ButtonBuilder.() -> Unit) {
+        val button = ButtonBuilder().apply(builder)
+        button.title = transformTranslation(button.title)
+        button.description = transformTranslation(button.description)
+        element(ButtonElementKt(button.title, button.description, button.callback::invoke, button.condition, button.text))
+    }
+
+    fun separator(builder: SeparatorBuilder.() -> Unit) {
+        val separator = SeparatorBuilder().apply(builder)
+        separator.title = transformTranslation(separator.title)
+        separator.description = transformTranslation(separator.description)
+        element(SeparatorElementKt(Translated(separator.title), Translated(separator.description), separator.condition))
+    }
+
+    internal fun transformTranslation(translation: String): String {
+        if (baseTranslation.isEmpty() || translation.isEmpty()) return translation
+        return "$baseTranslation.$translation"
+    }
+    internal fun transformTranslation(translation: TranslatableValue): TranslatableValue {
+        if (baseTranslation.isEmpty() || translation.translation.isEmpty()) return translation
+        return TranslatableValue(translation.value, "$baseTranslation.${translation.translation}")
+    }
 
     fun <T> observable(entry: Entry<T, *>, onChange: (T, T) -> Unit) = ObservableEntry(entry, onChange)
     fun <T> observable(entry: ConfigDelegateProvider<RConfigKtEntry<T>>, onChange: (T, T) -> Unit) = ObservableEntry(entry, onChange)

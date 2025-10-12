@@ -9,10 +9,8 @@ import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfigkt.api.CategoryKt
 import com.teamresourceful.resourcefulconfigkt.api.ObjectKt
 import com.teamresourceful.resourcefulconfigkt.api.ObjectProperty
-import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.ConfigKtInfo
 import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
-import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 
 open class CategoryBuilder internal constructor(internal val id: String) : EntriesBuilder() {
 
@@ -46,30 +44,6 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
         require(category.id !in categories) { "Category with id ${category.id} already exists" }
         categories[category.id] = category
         return category
-    }
-
-    fun button(builder: ButtonBuilder.() -> Unit) {
-        val button = ButtonBuilder().apply(builder)
-        elements.add(
-            ButtonElementKt(
-                button.title,
-                button.description,
-                button.callback::invoke,
-                button.condition,
-                button.text,
-            )
-        )
-    }
-
-    fun separator(builder: SeparatorBuilder.() -> Unit) {
-        val separator = SeparatorBuilder().apply(builder)
-        elements.add(
-            SeparatorElementKt(
-                TranslatableValue("", separator.title),
-                TranslatableValue("", separator.description),
-                separator.condition,
-            )
-        )
     }
 
     internal open fun build(parent: ResourcefulConfig?): ResourcefulConfig {

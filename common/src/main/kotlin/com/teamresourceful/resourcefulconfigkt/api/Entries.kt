@@ -92,6 +92,8 @@ class Entry<T, B : TypeBuilder> internal constructor(
     override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): EntryDelegate<T> {
         val id = id ?: prop.name
         val entryBuilder = builderFactory(id).apply(builderFiller)
+        entryBuilder.name = entries.transformTranslation(entryBuilder.name)
+        entryBuilder.description = entries.transformTranslation(entryBuilder.description)
         val data = entryBuilder.toEntryData()
         val property = EntryDelegateImpl<T>(this.value, this.value)
 

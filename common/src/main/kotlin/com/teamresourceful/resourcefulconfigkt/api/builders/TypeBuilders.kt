@@ -5,15 +5,25 @@ import com.teamresourceful.resourcefulconfig.api.types.options.EntryData
 import com.teamresourceful.resourcefulconfig.api.types.options.Option
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
-open class TypeBuilder internal constructor(private val id: String) {
+class Options internal constructor() {
+
+    internal val options: MutableMap<Option<*, *>, Any> = mutableMapOf()
+
+    operator fun <T : Any> plusAssign(entry: Pair<Option<*, T>, T>) {
+        options[entry.first] = entry.second
+    }
+}
+
+open class TypeBuilder internal constructor(val id: String) {
 
     var name: TranslatableValue = TranslatableValue(id)
     var description: TranslatableValue = TranslatableValue.EMPTY
-    var renderer: ResourceLocation? = null
+    var renderer: Identifier? = null
     var condition: () -> Boolean = { true }
     var searchTerms: List<String> = emptyList()
+    val options: Options = Options()
 
     @Deprecated("Use condition instead")
     var hidden: Boolean = false
@@ -27,10 +37,11 @@ open class TypeBuilder internal constructor(private val id: String) {
 
     internal fun toEntryData(): EntryData = EntryData(
         name, description,
-        buildMap<Option<*, *>, Any?>(::buildOptions).filter { entry -> entry.value != null }
+        buildMap(::buildOptions).filter { entry -> entry.value != null }
     )
 
     protected open fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
+        options.putAll(this.options.options)
         options.put(Option.HIDDEN, if (this.hidden) ConfigOption.Hidden() else null)
         options.put(Option.RENDERER, this.renderer)
         options.put(Option.SEARCH_TERM, this.searchTerms)

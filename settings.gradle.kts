@@ -9,6 +9,7 @@ pluginManagement {
         maven("https://maven.architectury.dev/")
         maven("https://maven.teamresourceful.com/repository/maven-public/")
         gradlePluginPortal()
+        mavenCentral()
     }
 }
 

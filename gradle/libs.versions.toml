@@ -1,16 +1,17 @@
 [versions]
 
 # Minecraft
-minecraft = "1.21.11"
-fabric-api = "0.139.4"
-neoforge = "21.11.0-beta"
+minecraft = "26.1-rc-1"
+neoform = "26.1-rc-1-1"
+fabric-api = "0.143.14+26.1"
+neoforge = "26.1.0.0-alpha.0+rc-1.20260319.191853"
 
 # Libraries
-modmenu = "14.0.0-rc.2"
-resourceful-config = "3.11.0"
+modmenu = "18.0.0-alpha.6"
+resourceful-config = "4.0.0-beta.2"
 
 # Plugins
-resourceful-loom = "1.0.7"
+resourceful-minecraft = "2.0.0"
 resourceful-gradle = "0.0.6"
 
 [libraries]
@@ -19,5 +20,5 @@ modmenu = { module = "com.terraformersmc:modmenu", version.ref = "modmenu" }
 
 [plugins]
 
-resourceful-loom = { id = "com.teamresourceful.plugins.loom", version.ref = "resourceful-loom" }
+resourceful-minecraft = { id = "com.teamresourceful.plugins.minecraft", version.ref = "resourceful-minecraft" }
 resourceful-gradle = { id = "com.teamresourceful.resourcefulgradle", version.ref = "resourceful-gradle" }

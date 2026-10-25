@@ -125,6 +125,7 @@ open class EntriesBuilder {
     fun <T, R> cachedTransform(entry: Entry<T, *>, from: (R) -> T, to: (T) -> R) = CachedTransformedEntry(entry, from, to)
     fun <T, R> cachedTransform(entry: ConfigDelegateProvider<RConfigKtEntry<T>>, from: (R) -> T, to: (T) -> R) = CachedTransformedEntry(entry, from, to)
 
+    @Suppress("FunctionName")
     companion object {
 
         fun Translated(key: String) : TranslatableValue = TranslatableValue("", key)

@@ -7,6 +7,7 @@ import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigLin
 import com.teamresourceful.resourcefulconfig.api.types.options.TranslatableValue
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfigkt.api.CategoryKt
+import com.teamresourceful.resourcefulconfigkt.api.ListEntry
 import com.teamresourceful.resourcefulconfigkt.api.ObjectKt
 import com.teamresourceful.resourcefulconfigkt.api.ObjectProperty
 import com.teamresourceful.resourcefulconfigkt.impl.ConfigKtInfo
@@ -45,6 +46,15 @@ open class CategoryBuilder internal constructor(internal val id: String) : Entri
         categories[category.id] = category
         return category
     }
+
+    // lists
+    inline fun <reified T : Any> list(default: List<T> = emptyList(), noinline builder: ListTypeBuilder<T>.() -> Unit = {}) =
+        list(null, default, T::class.java, builder)
+    inline fun <reified T : Any> list(id: String, default: List<T> = emptyList(), noinline builder: ListTypeBuilder<T>.() -> Unit = {}) =
+        list(id, default, T::class.java, builder)
+    fun <T : Any> list(id: String?, default: List<T> = emptyList(), type: Class<T>, builder: ListTypeBuilder<T>.() -> Unit = {}) =
+        ListEntry(id, type, default, builder)
+
 
     internal open fun build(parent: ResourcefulConfig?): ResourcefulConfig {
         val category = ParsedCategory(this.id, parent!!, ConfigKtInfo(this), this.elements, LinkedHashMap<String, ResourcefulConfig>())

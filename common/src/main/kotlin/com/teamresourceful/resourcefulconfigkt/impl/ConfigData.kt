@@ -2,9 +2,11 @@ package com.teamresourceful.resourcefulconfigkt.impl
 
 import com.teamresourceful.resourcefulconfig.api.types.ResourcefulConfigButton
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
+import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigListEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigObjectEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigSeparatorElement
 import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigEntry
+import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigListEntry
 import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigObjectEntry
 import com.teamresourceful.resourcefulconfig.api.types.info.ResourcefulConfigInfo
 import com.teamresourceful.resourcefulconfig.api.types.options.Option
@@ -91,5 +93,28 @@ internal data class SeparatorElementKt(
 ) : ResourcefulConfigSeparatorElement {
     override fun title(): TranslatableValue = title
     override fun description(): TranslatableValue = description
+    override fun isHidden(): Boolean = !condition()
+}
+
+internal data class ListEntryElementKt(
+    val id: String,
+    val condition: () -> Boolean,
+    val entry: ResourcefulConfigListEntry
+) : ResourcefulConfigListEntryElement {
+
+    constructor(id: String, entry: ResourcefulConfigListEntry) : this(
+        id,
+        { !entry.options().hasOption(Option.HIDDEN) },
+        entry
+    )
+
+    constructor(id: String, builder: TypeBuilder, entry: ResourcefulConfigListEntry) : this(
+        id,
+        builder.condition,
+        entry
+    )
+
+    override fun id(): String = id
+    override fun entry(): ResourcefulConfigListEntry = entry
     override fun isHidden(): Boolean = !condition()
 }

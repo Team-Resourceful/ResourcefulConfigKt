@@ -1,11 +1,18 @@
 package com.teamresourceful.resourcefulconfigkt.api
 
+import com.teamresourceful.resourcefulconfig.api.types.entries.ResourcefulConfigObjectEntry
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfigkt.KotlinConfigEntry
+import com.teamresourceful.resourcefulconfigkt.KotlinParsedListEntry
 import com.teamresourceful.resourcefulconfigkt.api.builders.EntriesBuilder
+import com.teamresourceful.resourcefulconfigkt.api.builders.ListTypeBuilder
+import com.teamresourceful.resourcefulconfigkt.api.builders.ObjectBuilder
 import com.teamresourceful.resourcefulconfigkt.api.builders.TypeBuilder
 import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.ListEntryElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
+import com.teamresourceful.resourcefulconfigkt.copyBuilderValues
+import com.teamresourceful.resourcefulconfigkt.entryTypeOf
 import kotlin.reflect.KProperty
 
 class EntryDelegate<T> internal constructor(entry: RConfigKtEntry<T>): RConfigKtEntry<T> by entry
@@ -80,6 +87,24 @@ class CachedTransformedEntryDelegate<T, R> internal constructor(
     override fun reset() = actualParent.reset()
 }
 
+class ListEntryDelegate<T> internal constructor(
+    private val list: MutableList<T>,
+    private val entry: KotlinParsedListEntry,
+) : RConfigKtEntry<MutableList<T>> {
+
+    override val parent: RConfigKtEntry<MutableList<T>> = this
+
+    // currently unsupported
+    override var onChange: (MutableList<T>, MutableList<T>) -> Unit = { _, _ -> }
+
+    override fun get(): MutableList<T> = list
+    override fun set(newValue: MutableList<T>) {
+        list.clear()
+        list.addAll(newValue)
+    }
+    override fun reset() = entry.reset()
+}
+
 
 class Entry<T, B : TypeBuilder> internal constructor(
     private val id: String?,
@@ -106,7 +131,7 @@ class Entry<T, B : TypeBuilder> internal constructor(
                     { property.set(it as T) },
                     { property.get() as Any },
                     data,
-                    value as Any
+                    value as Any,
                 )
             )
         )
@@ -144,6 +169,56 @@ class TransformedEntry<T, R>(
     override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): TransformedEntryDelegate<T, R> {
         val property = entry.provideDelegate(entries, prop)
         return TransformedEntryDelegate(property.parent, from, to)
+    }
+}
+
+class ListEntry<T : Any>(
+    private val id: String?,
+    private val type: Class<T>,
+    private val default: List<T>,
+    private val builderFiller: ListTypeBuilder<T>.() -> Unit,
+) : ConfigDelegateProvider<RConfigKtEntry<MutableList<T>>> {
+
+    @Suppress("UNCHECKED_CAST")
+    override operator fun provideDelegate(entries: EntriesBuilder, prop: KProperty<*>): ListEntryDelegate<T> {
+        val id = id ?: prop.name
+        val builder = ListTypeBuilder<T>(id).apply(builderFiller)
+        builder.name = entries.transformTranslation(builder.name)
+        builder.description = entries.transformTranslation(builder.description)
+        val data = builder.toEntryData()
+
+        val entryType = entryTypeOf(type)
+        val isObject = entryType == EntryType.OBJECT
+
+        require(isObject || entryType.isAllowedInArrays) {
+            "Entry type of $id must be allowed in lists (Object, Byte, Short, Int, Long, Float, Double, Boolean, String, Enum)!"
+        }
+
+        var objectEntryFactory: ((Any) -> ResourcefulConfigObjectEntry)? = null
+        var objectCopier: ((from: Any, to: Any) -> Unit)? = null
+
+        if (isObject) {
+            objectEntryFactory = { item: Any -> (item as ObjectBuilder).build(data) }
+            objectCopier = ::copyBuilderValues
+        }
+
+        val list = default.toMutableList()
+
+        val entry = KotlinParsedListEntry(
+            objectType = type,
+            list = list as MutableList<Any>,
+            options = data,
+            elementType = entryType,
+            factory = builder.factory,
+            objectEntryFactory = objectEntryFactory,
+            objectCopier = objectCopier,
+        )
+
+        val delegate = ListEntryDelegate(list, entry)
+
+        entries.element(ListEntryElementKt(id, builder, entry))
+
+        return delegate as ListEntryDelegate<T>
     }
 }
 

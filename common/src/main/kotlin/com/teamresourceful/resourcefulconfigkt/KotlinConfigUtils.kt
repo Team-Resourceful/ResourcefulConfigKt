@@ -1,10 +1,12 @@
 package com.teamresourceful.resourcefulconfigkt
 
+import com.teamresourceful.resourcefulconfig.api.types.elements.ResourcefulConfigEntryElement
 import com.teamresourceful.resourcefulconfig.api.types.entries.Observable
 import com.teamresourceful.resourcefulconfig.api.types.options.AnnotationGetter
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryData
 import com.teamresourceful.resourcefulconfig.api.types.options.EntryType
 import com.teamresourceful.resourcefulconfig.common.loader.entries.ParsedObservableEntry
+import com.teamresourceful.resourcefulconfigkt.api.builders.ObjectBuilder
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
@@ -51,4 +53,40 @@ internal inline fun <reified T : Annotation> KProperty<*>.getAnnotation(): T? {
     annotation = (this as? KMutableProperty<*>)?.setter?.findAnnotation<T>()
     if (annotation != null) return annotation
     return this.javaField?.annotations?.find { it.annotationClass == T::class } as T?
+}
+
+internal fun entryTypeOf(type: Class<*>): EntryType {
+    if (type.isEnum) return EntryType.ENUM
+    if (java.util.List::class.java.isAssignableFrom(type)) return EntryType.LIST
+    return when (type.kotlin.javaObjectType) {
+        Byte::class.javaObjectType -> EntryType.BYTE
+        Short::class.javaObjectType -> EntryType.SHORT
+        Int::class.javaObjectType -> EntryType.INTEGER
+        Long::class.javaObjectType -> EntryType.LONG
+        Float::class.javaObjectType -> EntryType.FLOAT
+        Double::class.javaObjectType -> EntryType.DOUBLE
+        Boolean::class.javaObjectType -> EntryType.BOOLEAN
+        String::class.javaObjectType -> EntryType.STRING
+        else -> EntryType.OBJECT
+    }
+}
+
+
+internal fun copyBuilderValues(from: Any, to: Any) {
+    fun getEntries(obj: Any): Map<String, KotlinConfigEntry<*>> {
+        return (obj as ObjectBuilder).elements.filterIsInstance<ResourcefulConfigEntryElement>().mapNotNull {
+            val entry = it.entry() as? KotlinConfigEntry<*> ?: return@mapNotNull null
+            it.id() to entry
+        }.toMap()
+    }
+
+    val source = getEntries(from)
+
+    for ((id, target) in getEntries(to)) {
+        val sourceEntry = source[id] ?: continue
+        val value = sourceEntry.get()
+        val copied = if (!value.javaClass.isArray) value
+        else (value as Array<*>).copyOf()
+        target.set(copied)
+    }
 }

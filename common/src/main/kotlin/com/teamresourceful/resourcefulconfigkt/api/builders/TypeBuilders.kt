@@ -42,9 +42,9 @@ open class TypeBuilder internal constructor(val id: String) {
 
     protected open fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         options.putAll(this.options.options)
-        options.put(Option.HIDDEN, if (this.hidden) ConfigOption.Hidden() else null)
-        options.put(Option.RENDERER, this.renderer)
-        options.put(Option.SEARCH_TERM, this.searchTerms)
+        options[Option.HIDDEN] = if (this.hidden) ConfigOption.Hidden() else null
+        options[Option.RENDERER] = this.renderer
+        options[Option.SEARCH_TERM] = this.searchTerms
     }
 }
 
@@ -56,8 +56,8 @@ class NumberBuilder<T> internal constructor(id: String) : TypeBuilder(id) where 
     override fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         super.buildOptions(options)
 
-        options.put(Option.RANGE, range?.let { ConfigOption.Range(it.start.toDouble(), it.endInclusive.toDouble())})
-        options.put(Option.SLIDER, if (this.slider) ConfigOption.Slider() else null)
+        options[Option.RANGE] = range?.let { ConfigOption.Range(min = it.start.toDouble(), max = it.endInclusive.toDouble())}
+        options[Option.SLIDER] = if (this.slider) ConfigOption.Slider() else null
     }
 }
 
@@ -69,18 +69,22 @@ class StringBuilder internal constructor(id: String) : TypeBuilder(id) {
     override fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         super.buildOptions(options)
 
-        options.put(Option.REGEX, regex?.toPattern())
-        options.put(Option.MULTILINE, if (this.multiline) ConfigOption.Multiline() else null)
+        options[Option.REGEX] = regex?.toPattern()
+        options[Option.MULTILINE] = if (this.multiline) ConfigOption.Multiline() else null
     }
 }
 
 // special
 
+class ListTypeBuilder<T : Any> internal constructor(id: String) : TypeBuilder(id) {
+    var factory: ((index: Int) -> T)? = null
+}
+
 class KeyBuilder internal constructor(id: String) : TypeBuilder(id) {
 
     override fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         super.buildOptions(options)
-        options.put(Option.KEYBIND, ConfigOption.Keybind())
+        options[Option.KEYBIND] = ConfigOption.Keybind()
     }
 }
 
@@ -92,7 +96,7 @@ class ColorBuilder internal constructor(id: String) : TypeBuilder(id) {
     override fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         super.buildOptions(options)
 
-        options.put(Option.COLOR, ConfigOption.Color(presets, allowAlpha))
+        options[Option.COLOR] = ConfigOption.Color(presets = presets, alpha = allowAlpha)
     }
 }
 
@@ -101,7 +105,7 @@ class SelectBuilder<T : Enum<T>> internal constructor(id: String) : TypeBuilder(
     override fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         super.buildOptions(options)
 
-        options.put(Option.SELECT, Component.literal("Select"))
+        options[Option.SELECT] = Component.literal("Select")
     }
 }
 
@@ -113,8 +117,8 @@ class DraggableBuilder<T : Enum<T>> internal constructor(id: String, private val
     override fun buildOptions(options: MutableMap<Option<*, *>, Any?>) {
         super.buildOptions(options)
 
-        options.put(Option.DRAGGABLE, this.duplicatable ?: empty)
-        options.put(Option.RANGE, range?.let { ConfigOption.Range(it.first.toDouble(), it.second.toDouble())})
+        options[Option.DRAGGABLE] = this.duplicatable ?: empty
+        options[Option.RANGE] = range?.let { ConfigOption.Range(min = it.first.toDouble(), max = it.second.toDouble())}
     }
 }
 

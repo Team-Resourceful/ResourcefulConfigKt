@@ -12,6 +12,7 @@ import com.teamresourceful.resourcefulconfig.common.loader.ParsedCategory
 import com.teamresourceful.resourcefulconfig.common.loader.ParsedConfig
 import com.teamresourceful.resourcefulconfigkt.impl.ButtonElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.EntryElementKt
+import com.teamresourceful.resourcefulconfigkt.impl.ListEntryElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.ObjectEntryElementKt
 import com.teamresourceful.resourcefulconfigkt.impl.SeparatorElementKt
 import kotlin.reflect.KClass
@@ -63,6 +64,29 @@ class KotlinConfigParser : ConfigParser {
                     val objectEntry = KotlinObjectEntry(subInstance, EntryData.of(property.annotationGetter, property.javaClass))
                     populateEntries(subInstance, objectEntry)
                     config.elements().add(ObjectEntryElementKt(data.id, objectEntry))
+                } else if (type == EntryType.LIST) {
+                    val objectType = requireNotNull(getListObjectType(property)) { "List entry ${property.name} must have a generic type parameter" }
+                    val entryType = getEntryType(objectType)
+                    require(entryType == EntryType.OBJECT || entryType.isAllowedInArrays) { "List entry ${property.name} element type must be a @ConfigObject or a support value type (Byte, Short, Int, Long, Float, Double, Boolean, String, Enum)!" }
+
+                    @Suppress("UNCHECKED_CAST")
+                    val list = requireNotNull(property.get(instance) as? MutableList<Any>) { "List entry ${property.name} must be a MutableList!" }
+
+
+
+                    val entry = KotlinParsedListEntry(
+                        objectType = objectType,
+                        list = list,
+                        options = EntryData.of(property.annotationGetter, property.javaClass),
+                        elementType = entryType,
+                        objectEntryFactory = { instance ->
+                            KotlinObjectEntry(instance, EntryData.of(property.annotationGetter, property.javaClass)).also {
+                                populateEntries(instance, it)
+                            }
+                        }
+                    )
+
+                    config.elements().add(ListEntryElementKt(data.id, entry))
                 } else if (property.returnType.isSubtypeOf(Observable::class.starProjectedType)) {
                     config.elements().add(EntryElementKt(data.id, ParsedObservableEntry(type, property, instance)))
                 } else {
@@ -172,8 +196,13 @@ class KotlinConfigParser : ConfigParser {
         return type
     }
 
+    private fun getListObjectType(property: KProperty1<*, *>): Class<*>? {
+        return (property.typeParameters.singleOrNull() as? KClass<*>)?.java
+    }
+
     private fun <T : Any> getEntryType(instance: T, property: KProperty1<T, *>): EntryType {
         var fieldType: Class<*> = property.javaClass
+        if (java.util.List::class.java.isAssignableFrom(fieldType)) return EntryType.LIST
         if (fieldType == Observable::class.java) fieldType = (property.get(instance) as Observable<*>).type()
         if (fieldType.isArray) fieldType = fieldType.componentType
         return getEntryType(fieldType)
@@ -182,6 +211,7 @@ class KotlinConfigParser : ConfigParser {
     private fun getEntryType(type: Class<*>): EntryType {
         return when {
             type.getAnnotation(ConfigObject::class.java) != null -> EntryType.OBJECT
+            java.util.List::class.java.isAssignableFrom(type) -> EntryType.LIST
             type == java.lang.Long.TYPE || type == java.lang.Long::class.java || type == Long::class.java -> EntryType.LONG
             type == java.lang.Integer.TYPE || type == java.lang.Integer::class.java || type == Int::class.java -> EntryType.INTEGER
             type == java.lang.Short.TYPE || type == java.lang.Short::class.java || type == Short::class.java -> EntryType.SHORT
